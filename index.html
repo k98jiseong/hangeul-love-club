@@ -10,160 +10,208 @@
 
     <style>
         :root {
-            --color-dark-blue: #010D26;
-            --color-primary-blue: #0455BF;
-            --color-bg-light: #CEE8F2;
-            --color-white: #FFFFFF;
+            --color-primary: #0455BF;
+            --color-bg: #CEE8F2;
+            --color-machine-body: #2c3e50;
+            --color-lever: #feca57;
         }
 
         body {
             font-family: 'Pretendard', sans-serif;
-            background-color: var(--color-bg-light);
+            background-color: var(--color-bg);
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             margin: 0;
             padding: 20px;
-            box-sizing: border-box;
         }
 
         .container {
-            background: var(--color-white);
-            padding: 30px;
-            border-radius: 25px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            background: white;
+            padding: 35px 25px;
+            border-radius: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
             width: 100%;
-            max-width: 400px;
+            max-width: 380px;
             text-align: center;
         }
 
-        /* 1. 로그인/입장 화면 */
-        #username {
-            width: 100%;
-            padding: 15px;
-            font-size: 1rem;
-            border: 2px solid #ddd;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            box-sizing: border-box;
-        }
-
-        /* 2. 메인 화면 - 3D 기계 배치 */
-        #main-screen { display: none; }
-        
-        .machine-container {
-            width: 260px;
-            height: 320px;
-            margin: 0 auto;
+        /* --- 3D 가챠 기계 디자인 --- */
+        .gacha-area {
             position: relative;
-            /* 생성된 이미지를 배경으로 설정 */
-            background: url('gacha-machine.png') no-repeat center;
-            background-size: contain;
+            padding: 20px 0;
+            perspective: 1000px;
         }
 
-        /* 레버 영역 (이미지 위 투명 버튼 배치) */
-        .lever-overlay {
-            position: absolute;
-            bottom: 40px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 80px;
-            height: 80px;
-            background: var(--color-lever-yellow);
+        /* 유리 돔 */
+        .machine-dome {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto;
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.2) 50%, rgba(200,230,255,0.4) 100%);
             border-radius: 50%;
             border: 4px solid #fff;
+            position: relative;
+            z-index: 2;
+            overflow: hidden;
+            box-shadow: inset -10px -10px 20px rgba(0,0,0,0.1), 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        /* 5가지 색상의 화려한 캡슐 */
+        .capsule {
+            position: absolute;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            box-shadow: inset -3px -3px 6px rgba(0,0,0,0.2), 2px 3px 5px rgba(0,0,0,0.1);
+        }
+        .cp-red { background: linear-gradient(135deg, #ff6b6b 50%, #fff 50%); top: 130px; left: 40px; transform: rotate(20deg); }
+        .cp-blue { background: linear-gradient(135deg, #4da6ff 50%, #fff 50%); top: 145px; left: 90px; transform: rotate(-15deg); }
+        .cp-yellow { background: linear-gradient(135deg, #feca57 50%, #fff 50%); top: 120px; left: 130px; transform: rotate(45deg); }
+        .cp-green { background: linear-gradient(135deg, #1dd1a1 50%, #fff 50%); top: 90px; left: 60px; transform: rotate(-30deg); }
+        .cp-purple { background: linear-gradient(135deg, #a29bfe 50%, #fff 50%); top: 150px; left: 65px; transform: rotate(100deg); }
+
+        /* 기계 하단부 (3D 금속 질감) */
+        .machine-body {
+            width: 210px;
+            height: 160px;
+            background: linear-gradient(145deg, #34495e, #1a252f);
+            margin: -45px auto 0;
+            border-radius: 20px 20px 40px 40px;
+            position: relative;
+            z-index: 1;
+            box-shadow: 0 10px 0 #111, 0 15px 25px rgba(0,0,0,0.3);
             display: flex;
             justify-content: center;
             align-items: center;
-            font-weight: bold;
+        }
+
+        /* 노란색 회전 레버 */
+        .lever {
+            width: 85px;
+            height: 85px;
+            background: radial-gradient(circle at 30% 30%, #feca57, #f39c12);
+            border: 5px solid #fff;
+            border-radius: 50%;
             cursor: pointer;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: 900;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+            box-shadow: 0 6px 0 #d35400, 0 8px 15px rgba(0,0,0,0.3);
             transition: 0.1s;
+            z-index: 3;
+            user-select: none;
         }
 
-        .lever-overlay:active {
-            transform: translateX(-50%) scale(0.9);
+        .lever:active {
+            transform: translateY(4px) rotate(20deg);
+            box-shadow: 0 2px 0 #d35400;
         }
 
-        /* 당첨 결과 바 (검은색 네온 스타일) */
+        /* 결과 표시창 */
         #result-bar {
             width: 220px;
-            height: 50px;
-            background: #111;
-            border-radius: 15px;
-            margin: 20px auto;
+            height: 48px;
+            background: #000;
+            border-radius: 12px;
+            margin: 25px auto;
             display: flex;
             justify-content: center;
             align-items: center;
             color: #00d2ff;
             font-weight: bold;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             border: 2px solid #333;
+            box-shadow: inset 0 0 10px rgba(0,210,255,0.2);
         }
 
-        /* 애니메이션: 기계가 흔들릴 때 */
-        .shake-animation {
-            animation: shake 0.1s infinite;
+        /* --- 자연스러운 애니메이션 --- */
+        .spinning .capsule {
+            animation: jump 0.5s infinite ease-in-out;
+        }
+        .spinning .cp-red { animation-delay: 0.1s; }
+        .spinning .cp-blue { animation-delay: 0.2s; }
+        .spinning .cp-yellow { animation-delay: 0s; }
+        .spinning .cp-green { animation-delay: 0.3s; }
+        .spinning .cp-purple { animation-delay: 0.15s; }
+
+        @keyframes jump {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            50% { transform: translate(var(--x, 15px), var(--y, -80px)) rotate(180deg); }
         }
 
-        @keyframes shake {
-            0% { transform: rotate(0deg); }
-            50% { transform: rotate(1deg) translate(2px, -2px); }
-            100% { transform: rotate(-1deg) translate(-2px, 2px); }
+        /* 기계 전체 반동 */
+        .recoil { animation: recoil 0.1s infinite; }
+        @keyframes recoil {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(2px); }
         }
 
-        /* 버튼 스타일 복원 */
+        /* 버튼 및 기타 UI */
         button {
-            background: var(--color-primary-blue);
+            background: var(--color-primary);
             color: white;
             border: none;
-            padding: 15px 25px;
-            border-radius: 12px;
+            padding: 16px;
+            border-radius: 14px;
             font-size: 1.1rem;
             font-weight: bold;
             cursor: pointer;
             width: 100%;
+            transition: 0.2s;
         }
-
+        button:active { transform: scale(0.98); }
         .btn-select { background: #1dd1a1; margin-top: 10px; }
-        
-        #success-screen { display: none; }
+        input {
+            width: 100%; padding: 14px; border-radius: 12px; border: 2px solid #ddd;
+            margin-bottom: 20px; box-sizing: border-box; font-size: 1rem;
+        }
     </style>
 </head>
 <body>
 
     <div id="intro-screen" class="container">
-        <h1>한글사랑클럽<br>단어 뽑기</h1>
-        <p>이름을 입력하고 시작하세요!</p>
-        <input type="text" id="username" placeholder="이름 입력">
-        <button onclick="enterMachine()">입장하기</button>
+        <h2 style="color:var(--color-primary)">한글사랑클럽</h2>
+        <p>환영합니다!<br>이름을 입력하고 입장하세요.</p>
+        <input type="text" id="username" placeholder="성함 입력">
+        <button onclick="enter()">입장하기</button>
     </div>
 
-    <div id="main-screen" class="container">
-        <h3 id="welcome-msg" style="color: var(--color-primary-blue);"></h3>
+    <div id="main-screen" class="container" style="display:none">
+        <h4 id="welcome-msg" style="margin:0; color:#555"></h4>
         
-        <div class="machine-container" id="gacha-machine">
-            <div class="lever-overlay" onclick="startDraw()">PUSH</div>
+        <div class="gacha-area" id="gacha-area">
+            <div class="machine-dome" id="dome">
+                <div class="capsule cp-red" style="--x:-20px; --y:-70px"></div>
+                <div class="capsule cp-blue" style="--x:30px; --y:-90px"></div>
+                <div class="capsule cp-yellow" style="--x:-40px; --y:-60px"></div>
+                <div class="capsule cp-green" style="--x:10px; --y:-80px"></div>
+                <div class="capsule cp-purple" style="--x:25px; --y:-100px"></div>
+            </div>
+            <div class="machine-body">
+                <div class="lever" onclick="draw()">PUSH</div>
+            </div>
         </div>
 
         <div id="result-bar">?</div>
-
-        <div id="action-area">
-            <button id="select-btn" class="btn-select" onclick="selectWord()" style="display: none;">이 단어로 결정!</button>
-        </div>
-        <p style="font-size: 0.9rem; color: #777; margin-top: 10px;">남은 단어: <span id="count">0</span> / 20</p>
+        <button id="select-btn" class="btn-select" onclick="confirmWord()" style="display:none">이 단어로 결정!</button>
+        <p style="font-size:0.8rem; color:#888; margin-top:15px">남은 단어: <span id="count">0</span> / 20</p>
     </div>
 
-    <div id="success-screen" class="container">
-        <h1 style="font-size: 3rem;">🎁</h1>
-        <h2 id="final-username"></h2>
-        <p>최종 선택 단어: <strong><span id="chosen-word" style="font-size: 1.5rem; color: var(--color-primary-blue);"></span></strong></p>
-        <p>축하드립니다!</p>
+    <div id="success-screen" class="container" style="display:none">
+        <h1 style="font-size:3.5rem">🎁</h1>
+        <h2 id="final-user"></h2>
+        <p>선택하신 단어는</p>
+        <h3 id="final-word" style="color:var(--color-primary); font-size:1.8rem"></h3>
+        <p>확정되었습니다!</p>
     </div>
 
     <script>
-        // Firebase 설정 유지
+        // Firebase 설정 (기존 정보 유지)
         const firebaseConfig = {
             apiKey: "AIzaSyB0fYqqVIcSnZI34Qk5AldPAKCiwK7fb60",
             authDomain: "hangeul-love-club.firebaseapp.com",
@@ -174,70 +222,64 @@
             measurementId: "G-RCPVETCQB0",
             databaseURL: "https://hangeul-love-club-default-rtdb.firebaseio.com"
         };
-
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        let adjectives = [];
-        let currentWord = "";
-        let username = "";
-        let isRolling = false;
+        let words = [];
+        let current = "";
+        let user = "";
+        let rolling = false;
 
-        db.ref('words').on('value', (snapshot) => {
-            const data = snapshot.val();
-            if (data) {
-                adjectives = data;
-                document.getElementById('count').innerText = adjectives.length;
-            }
+        db.ref('words').on('value', snap => {
+            words = snap.val() || [];
+            document.getElementById('count').innerText = words.length;
         });
 
-        function enterMachine() {
-            username = document.getElementById('username').value.trim();
-            if (!username) return alert("이름을 입력하세요!");
+        function enter() {
+            user = document.getElementById('username').value.trim();
+            if(!user) return alert("이름을 입력하세요!");
             document.getElementById('intro-screen').style.display = 'none';
             document.getElementById('main-screen').style.display = 'block';
-            document.getElementById('welcome-msg').innerText = `${username}님 반가워요!`;
+            document.getElementById('welcome-msg').innerText = `${user}님 행운을 빌어요!`;
         }
 
-        function startDraw() {
-            if (isRolling || adjectives.length === 0) return;
-            isRolling = true;
+        function draw() {
+            if(rolling || words.length === 0) return;
+            rolling = true;
             
-            const machine = document.getElementById('gacha-machine');
-            machine.classList.add('shake-animation'); // 기계 흔들림 효과
+            const dome = document.getElementById('dome');
+            const area = document.getElementById('gacha-area');
+            const result = document.getElementById('result-bar');
             
-            let counter = 0;
-            let shuffle = setInterval(() => {
-                document.getElementById('result-bar').innerText = adjectives[Math.floor(Math.random() * adjectives.length)];
-                counter++;
-                if (counter > 15) {
-                    clearInterval(shuffle);
-                    machine.classList.remove('shake-animation');
-                    stopDraw();
+            dome.classList.add('spinning');
+            area.classList.add('recoil');
+            document.getElementById('select-btn').style.display = 'none';
+
+            let cnt = 0;
+            let timer = setInterval(() => {
+                result.innerText = words[Math.floor(Math.random()*words.length)];
+                cnt++;
+                if(cnt > 20) {
+                    clearInterval(timer);
+                    dome.classList.remove('spinning');
+                    area.classList.remove('recoil');
+                    current = words[Math.floor(Math.random()*words.length)];
+                    result.innerText = current;
+                    document.getElementById('select-btn').style.display = 'block';
+                    rolling = false;
                 }
-            }, 100);
+            }, 80);
         }
 
-        function stopDraw() {
-            currentWord = adjectives[Math.floor(Math.random() * adjectives.length)];
-            document.getElementById('result-bar').innerText = currentWord;
-            document.getElementById('select-btn').style.display = 'block';
-            isRolling = false;
-        }
-
-        function selectWord() {
-            if (!confirm(`'${currentWord}'를 선택하시겠습니까?`)) return;
-            const updated = adjectives.filter(w => w !== currentWord);
-            
-            const selectionRef = db.ref('selections').push();
-            Promise.all([
-                db.ref('words').set(updated),
-                selectionRef.set({ username, selectedWord: currentWord, timestamp: firebase.database.ServerValue.TIMESTAMP })
-            ]).then(() => {
+        function confirmWord() {
+            if(!confirm(`'${current}'를 선택하시겠습니까?`)) return;
+            const updated = words.filter(w => w !== current);
+            db.ref('words').set(updated).then(() => {
+                db.ref('selections').push({ user, word: current, time: Date.now() });
                 document.getElementById('main-screen').style.display = 'none';
                 document.getElementById('success-screen').style.display = 'block';
-                document.getElementById('final-username').innerText = `${username}님!`;
-                document.getElementById('chosen-word').innerText = currentWord;
+                document.getElementById('final-user').innerText = `${user}님!`;
+                document.getElementById('final-word').innerText = current;
             });
         }
     </script>
