@@ -9,302 +9,252 @@
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
 
     <style>
-        /* 1. 디자인 기본 설정 (이미지 4 컬러 스킴 반영) */
+        /* 1. 디자인 기본 설정 */
         :root {
-            --color-dark-blue: #010D26; /* Deepest Blue */
-            --color-primary-blue: #0455BF; /* Main Accent */
-            --color-mid-blue: #022859; /* Medium Blue */
-            --color-light-blue: #0487D9; /* Bright Accent */
-            --color-bg-blue: #CEE8F2; /* Soft Background */
+            --color-dark-blue: #010D26;
+            --color-primary-blue: #0455BF;
+            --color-lever-yellow: #feca57; /* 레버 노란색 */
+            --color-bg-light-blue: #CEE8F2; /* Soft Background */
             --color-white: #FFFFFF;
-            --color-black: #333333;
-            --color-green: #10ac84;
             --color-shadow: rgba(0, 0, 0, 0.1);
         }
 
         body {
-            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
-            background-color: var(--color-bg-blue);
-            color: var(--color-black);
+            font-family: 'Pretendard', sans-serif;
+            background-color: var(--color-bg-light-blue);
+            color: #333;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             margin: 0;
-            padding: 20px; /* 모바일 여백 중요 */
+            padding: 20px;
             box-sizing: border-box;
-            overflow-x: hidden;
         }
 
-        /* 공통 컨테이너 스타일 */
+        /* 공통 컨테이너 */
         .container {
             background: var(--color-white);
-            padding: 30px;
-            border-radius: 25px;
-            box-shadow: 0 15px 35px var(--color-shadow);
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px var(--color-shadow);
             width: 100%;
-            max-width: 480px; /* PC에서도 너무 커지지 않게 */
+            max-width: 420px;
             text-align: center;
-            opacity: 0;
-            animation: fadeIn 0.5s forwards;
-            position: relative;
         }
-
-        @keyframes fadeIn { to { opacity: 1; } }
 
         h1 {
             color: var(--color-dark-blue);
-            font-size: 1.6rem;
-            margin-bottom: 25px;
-            line-height: 1.4;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
         }
 
         /* 2. 로그인 화면 */
         #login-screen { display: block; }
-        
         #username {
-            width: calc(100% - 30px);
-            padding: 15px;
-            font-size: 1.1rem;
-            border: 2px solid var(--color-light-blue);
-            border-radius: 12px;
+            width: calc(100% - 24px);
+            padding: 12px;
+            font-size: 1rem;
+            border: 2px solid var(--color-bg-light-blue);
+            border-radius: 10px;
             margin-bottom: 15px;
             text-align: center;
         }
-        
-        #username:focus {
-            outline: none;
-            border-color: var(--color-primary-blue);
-            box-shadow: 0 0 8px rgba(4, 85, 191, 0.3);
-        }
 
-        /* 3. 뽑기 화면 */
+        /* 3. 메인 뽑기 화면 (Gacha Machine) */
         #main-screen { display: none; }
         
-        .machine-wrapper {
-            position: relative;
+        .gacha-machine {
             width: 200px;
-            height: 350px;
-            margin: 0 auto 30px;
+            margin: 0 auto 20px;
+            position: relative;
         }
 
-        /* 기계 상단 돔 (이미지 1, 2, 3 참고) */
+        /* 기계 상단 돔 (이미지 3 참고) */
         .machine-dome {
-            position: absolute;
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
             width: 180px;
             height: 180px;
-            background: radial-gradient(circle at 70% 30%, rgba(255,255,255,0.7), rgba(255,255,255,0.1)),
-                        rgba(206, 232, 242, 0.5); /* Semi-transparent */
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.5); /* 투명 */
             border-radius: 50%;
-            border: 4px solid var(--color-primary-blue);
-            box-shadow: inset 0 0 15px rgba(0,0,0,0.1);
+            border: 3px solid var(--color-primary-blue);
             overflow: hidden;
-            z-index: 2;
-        }
-
-        /* 돔 안의 캡슐들 (이미지 1 참고) */
-        .capsule-holder {
             position: relative;
-            width: 100%;
-            height: 100%;
+            z-index: 1;
         }
 
+        /* 돔 안의 캡슐들 (이미지 3 참고 - 흰/파 캡슐) */
         .capsule {
             position: absolute;
             width: 30px;
             height: 30px;
             border-radius: 50%;
-            box-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            border: 1px solid #ccc;
+            /* 흰색/파란색 50:50 그라데이션 (이미지 3 참고) */
+            background: linear-gradient(135deg, #FFFFFF 50%, #4da6ff 50%);
             opacity: 0.9;
+            box-shadow: 1px 1px 2px rgba(0,0,0,0.2);
         }
 
-        /* 돔 안 캡슐 랜덤 배치 및 색상 */
-        .c1 { top: 60px; left: 40px; background-color: var(--color-light-blue); }
-        .c2 { top: 70px; left: 90px; background-color: #feca57; } /* Yellow */
-        .c3 { top: 40px; left: 110px; background-color: var(--color-primary-blue); }
-        .c4 { top: 100px; left: 70px; background-color: #ff6b6b; } /* Red */
-        .c5 { top: 110px; left: 30px; background-color: #1dd1a1; } /* Green */
-        .c6 { top: 30px; left: 60px; background-color: #FFFFFF; border: 1px solid #ccc; }
+        /* 캡슐 랜덤 배치 */
+        .c1 { top: 70px; left: 40px; }
+        .c2 { top: 100px; left: 100px; }
+        .c3 { top: 50px; left: 110px; }
+        .c4 { top: 90px; left: 60px; }
+        .c5 { top: 120px; left: 30px; }
+        .c6 { top: 40px; left: 70px; }
+        .c7 { top: 110px; left: 130px; }
 
-        /* 기계 본체 (이미지 1, 2, 3 참고 - 파란색) */
+        /* 기계 본체 (이미지 3 참고 - 짙은 회색/네이비) */
         .machine-body {
-            position: absolute;
-            top: 160px;
-            left: 50%;
-            transform: translateX(-50%);
             width: 200px;
-            height: 190px;
-            background-color: var(--color-primary-blue);
-            border-radius: 20px 20px 0 0;
-            box-shadow: inset 0 5px 15px var(--color-mid-blue);
-            z-index: 1;
+            height: 160px;
+            margin-top: -30px; /* 돔과 겹치게 */
+            background-color: #333b4d; /* 짙은 색 */
+            border-radius: 20px;
+            box-shadow: inset 0 5px 15px rgba(0,0,0,0.3);
+            position: relative;
+            z-index: 2;
             display: flex;
             justify-content: center;
             align-items: center;
         }
 
-        /* 레버 (이미지 3 참고) */
-        .machine-lever {
-            width: 60px;
-            height: 60px;
-            background-color: #feca57; /* Yellow Lever */
+        /* 레버 (이미지 3 참고 - 노란색 원형 버튼) */
+        .lever-btn {
+            width: 90px;
+            height: 90px;
+            background-color: var(--color-lever-yellow);
             border-radius: 50%;
-            border: 4px solid var(--color-white);
+            border: 5px solid var(--color-white);
             box-shadow: 0 4px 8px rgba(0,0,0,0.3);
             cursor: pointer;
-            transition: all 0.2s;
-            position: relative;
-        }
-        
-        .machine-lever::after {
-            content: "LEVER";
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: var(--color-dark-blue);
-            font-size: 0.7rem;
-            font-weight: bold;
-        }
-
-        .machine-lever:active { transform: scale(0.95); box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
-
-        /* 결과 표시창 */
-        #result-display {
-            position: absolute;
-            top: 280px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 140px;
-            height: 50px;
-            background-color: var(--color-white);
-            border-radius: 10px;
-            box-shadow: inset 0 2px 6px rgba(0,0,0,0.2);
             display: flex;
             justify-content: center;
             align-items: center;
-            z-index: 3;
-            font-size: 1.3rem;
             font-weight: bold;
+            font-size: 0.9rem;
             color: var(--color-dark-blue);
-            padding: 0 10px;
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+
+        .lever-btn:active {
+            transform: scale(0.95);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        /* 결과 표시창 (이미지 3 참고 - 하단 검은색 바) */
+        #result-bar {
+            width: 200px;
+            height: 40px;
+            margin: 10px auto;
+            background-color: #000; /* 검은색 */
+            border-radius: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #4da6ff; /* 파란색 글씨 (이미지 3 참고) */
+            padding: 0 15px;
+            box-sizing: border-box;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
         }
 
-        /* 4. 애니메이션 효과 (Shake) */
-        .shake { animation: shake 0.3s infinite; }
-        @keyframes shake {
-            0% { transform: translate(-3px, 160px) rotate(0deg); }
-            50% { transform: translate(3px, 160px) rotate(1deg); }
-            100% { transform: translate(-3px, 160px) rotate(-1deg); }
+        /* 4. 애니메이션 (같은 화면에서 작동) */
+        /* 레버 눌렀을 때 돔 안 캡슐 섞기 */
+        .machine-dome.spin .capsule {
+            animation: capsuleShuffle 1s infinite ease-in-out;
         }
 
-        /* 돔 안 캡슐 회전 애니메이션 */
-        .machine-dome.spin .capsule {
-            animation: capsuleSpin 1s infinite linear;
+        @keyframes capsuleShuffle {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(10px, -10px) rotate(90deg); }
+            50% { transform: translate(-10px, 10px) rotate(180deg); }
+            75% { transform: translate(10px, 10px) rotate(270deg); }
+            100% { transform: translate(0, 0) rotate(360deg); }
         }
-        @keyframes capsuleSpin {
-            to { transform: rotate(360deg); }
+
+        /* 결과창 팝업 효과 */
+        #result-bar.pop { animation: resultPop 0.3s ease-out; }
+        @keyframes resultPop {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
         }
 
         /* 5. 버튼 스타일 */
-        .btn-group { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+        .btn-group { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 20px; }
         button {
-            background-color: var(--color-mid-blue);
             color: var(--color-white);
             border: none;
-            padding: 15px 30px;
-            border-radius: 12px;
-            font-size: 1.1rem;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 1rem;
             font-weight: bold;
             cursor: pointer;
-            transition: background-color 0.2s, transform 0.1s;
-            flex: 1 1 180px; /* Responsive Buttons */
-            max-width: 200px;
+            transition: opacity 0.2s;
+            flex: 1 1 150px;
+            max-width: 180px;
         }
-
-        button:hover { background-color: var(--color-dark-blue); }
+        button:hover { opacity: 0.9; }
         button:active { transform: scale(0.98); }
-        button:disabled { background-color: #ccc; cursor: not-allowed; }
 
-        .btn-select { background-color: var(--color-green); }
-        .btn-select:hover { background-color: #0b9370; }
+        .btn-login { background-color: var(--color-primary-blue); width: 100%; max-width: 100%; }
+        .btn-select { background-color: #1dd1a1; }
 
         /* 6. 완료 메시지 */
         #success-screen { display: none; }
-        
-        .confetti-icon {
-            font-size: 4rem;
-            margin-bottom: 20px;
-            animation: confettiPop 0.6s ease-out;
-        }
-        
-        @keyframes confettiPop {
-            0% { transform: scale(0); opacity: 0; }
-            80% { transform: scale(1.2); }
-            100% { transform: scale(1); opacity: 1; }
-        }
-        
-        #chosen-word {
-            color: var(--color-primary-blue);
-            font-weight: bold;
-            font-size: 1.8rem;
-        }
+        #chosen-word { color: var(--color-primary-blue); font-weight: bold; font-size: 1.6rem; }
 
-        /* 정보 메시지 */
-        .info-txt { font-size: 0.9rem; color: #777; margin-top: 15px; margin-bottom: 5px; }
-        #count { font-weight: bold; color: var(--color-black); }
+        .info-txt { font-size: 0.85rem; color: #888; margin-top: 15px; }
 
     </style>
 </head>
 <body>
 
-    <div id="login-screen" class="container">
-        <h1>환영합니다.<br>한글사랑클럽 월별 단어 뽑기에 입장해주세요</h1>
-        <p class="info-txt">뽑기를 진행할 당신의 이름을 입력하세요.</p>
-        <input type="text" id="username" placeholder="이름을 입력하세요 (예: kimgclub)">
-        <button id="login-btn" onclick="enterMachine()">입장하고 뽑기</button>
+    <div id="intro-screen" class="container"> <h1>한글사랑클럽<br>월별 단어 뽑기</h1>
+        <p class="info-txt" style="margin-bottom: 20px;">'환영합니다.<br>한글사랑클럽 월별 단어 뽑기에 입장해주세요'</p>
+        <p class="info-txt">이름을 입력하세요.</p>
+        <input type="text" id="username" placeholder="이름을 입력하세요">
+        <button class="btn-login" onclick="enterMachine()">입장하고 뽑기</button>
     </div>
 
     <div id="main-screen" class="container">
-        <h1 id="welcome-msg"></h1>
+        <h1 id="welcome-msg" style="font-size: 1.2rem; margin-bottom: 25px;"></h1>
         
-        <div class="machine-wrapper">
+        <div class="gacha-machine">
             <div class="machine-dome" id="machine-dome">
-                <div class="capsule-holder">
-                    <div class="capsule c1"></div> <div class="capsule c2"></div>
-                    <div class="capsule c3"></div> <div class="capsule c4"></div>
-                    <div class="capsule c5"></div> <div class="capsule c6"></div>
-                </div>
+                <div class="capsule c1"></div> <div class="capsule c2"></div>
+                <div class="capsule c3"></div> <div class="capsule c4"></div>
+                <div class="capsule c5"></div> <div class="capsule c6"></div>
+                <div class="capsule c7"></div>
             </div>
-            <div class="machine-body" id="machine-body">
-                <div class="machine-lever" id="lever" onclick="startDraw()"></div>
+            <div class="machine-body">
+                <div class="lever-btn" id="lever-btn" onclick="startDraw()">레버 돌리기</div>
             </div>
-            <div id="result-display">?</div>
         </div>
 
-        <p class="info-txt">레버를 눌러 랜덤 단어를 뽑으세요!</p>
+        <div id="result-bar">당첨 결과?</div>
+
+        <p class="info-txt">'레버 돌리기'를 눌러 랜덤 단어를 뽑으세요!</p>
         <div class="btn-group">
             <button id="select-btn" class="btn-select" onclick="selectWord()" style="display: none;">최종 선택하기</button>
         </div>
-        <p class="info-txt">남은 형용사 수: <span id="count">0</span> / 20</p>
+        <p class="info-txt">남은 형용사 수: <span id="count" style="font-weight: bold; color:#333;">0</span> / 20</p>
     </div>
 
     <div id="success-screen" class="container">
-        <div class="confetti-icon">🎉</div>
+        <h1 style="font-size: 2rem;">🎉</h1>
         <h1>축하합니다!</h1>
-        <p><span id="final-username"></span>님이 선택하신 단어는:</p>
+        <p><span id="final-username"></span>님이 최종 선택하신 단어는:</p>
         <p><span id="chosen-word"></span></p>
-        <p>입니다. 이번 달 당신의 단어가 되었어요!</p>
+        <p>입니다. 당신의 단어입니다!</p>
     </div>
 
     <script>
-        // 1. Firebase 구성 설정 (사용자님의 정보)
+        // Firebase 구성 설정 (사용자님의 정보로 유지)
         const firebaseConfig = {
             apiKey: "AIzaSyB0fYqqVIcSnZI34Qk5AldPAKCiwK7fb60",
             authDomain: "hangeul-love-club.firebaseapp.com",
@@ -324,16 +274,15 @@
         let username = "";
         let isRolling = false;
 
-        const loginScreen = document.getElementById('login-screen');
+        const introScreen = document.getElementById('intro-screen'); // 로그인 화면
         const mainScreen = document.getElementById('main-screen');
         const successScreen = document.getElementById('success-screen');
-        const resultDisplay = document.getElementById('result-display');
+        const resultBar = document.getElementById('result-bar');
         const selectBtn = document.getElementById('select-btn');
         const countDisplay = document.getElementById('count');
         const welcomeMsg = document.getElementById('welcome-msg');
         const machineDome = document.getElementById('machine-dome');
-        const machineBody = document.getElementById('machine-body');
-        const lever = document.getElementById('lever');
+        const leverBtn = document.getElementById('lever-btn');
         const chosenWordTxt = document.getElementById('chosen-word');
         const finalUsernameTxt = document.getElementById('final-username');
 
@@ -356,29 +305,28 @@
                 alert("이름을 입력해야 입장할 수 있습니다.");
                 return;
             }
-            loginScreen.style.display = 'none';
+            introScreen.style.display = 'none'; // 로그인화면 숨김
             mainScreen.style.display = 'block';
-            welcomeMsg.innerText = `${username}님, 환영합니다!`;
+            welcomeMsg.innerText = `${username}님, 어서오세요!`;
         }
 
         // [기능 3] 뽑기 시작 (그래픽 효과 추가)
         function startDraw() {
             if (isRolling) return;
             if (adjectives.length === 0) {
-                alert("남은 형용사가 동이 났어요!");
+                alert("모든 형용사가 선택되었습니다!");
                 return;
             }
             isRolling = true;
-            machineBody.classList.add('shake');
-            machineDome.classList.add('spin');
-            resultDisplay.innerText = "...";
+            machineDome.classList.add('spin'); // 돔 안 캡슐 섞기 시작
+            resultBar.innerText = "단어 섞는 중...";
+            resultBar.classList.remove('pop');
             selectBtn.style.display = 'none';
-            lever.style.pointerEvents = 'none'; // 레버 중복 클릭 방지
             
             let counter = 0;
             let shuffleInterval = setInterval(() => {
                 const tempIndex = Math.floor(Math.random() * adjectives.length);
-                resultDisplay.innerText = adjectives[tempIndex];
+                resultBar.innerText = adjectives[tempIndex];
                 counter++;
                 if (counter > 15) { // 1.5초 셔플
                     clearInterval(shuffleInterval);
@@ -389,13 +337,12 @@
 
         // 뽑기 종료
         function stopDraw() {
-            machineBody.classList.remove('shake');
-            machineDome.classList.remove('spin');
-            lever.style.pointerEvents = 'auto';
+            machineDome.classList.remove('spin'); // 돔 안 캡슐 섞기 중지
             const finalIndex = Math.floor(Math.random() * adjectives.length);
             currentWord = adjectives[finalIndex];
-            resultDisplay.innerText = currentWord;
-            selectBtn.style.display = 'inline-block';
+            resultBar.innerText = `'${currentWord}' 당첨!`;
+            resultBar.classList.add('pop'); // 결과창 팝업 효과
+            selectBtn.style.display = 'inline-block'; // 선택하기 버튼 표시
             isRolling = false;
         }
 
@@ -420,7 +367,7 @@
                     newSelectionRef.set(selectionData) // 누가 무엇을 선택했는지 기록
                 ]).then(() => {
                     alert(`축하합니다! '${currentWord}'가 당신의 단어로 확정되었습니다.`);
-                    showSuccess();
+                    showSuccess(); // 완료 메시지 화면으로 이동
                 }).catch((error) => {
                     alert("최종 선택 정보를 저장하는 데 실패했습니다: " + error.message);
                 });
