@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>월별 형용사 뽑기</title>
+    <style>
+        :root {
+            --primary-color: #ff6b6b;
+            --secondary-color: #feca57;
+            --bg-color: #f7f1e3;
+        }
+
+        body {
+            font-family: 'Pretendard', sans-serif;
+            background-color: var(--bg-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        /* 공통 컨테이너 */
+        .container {
+            text-align: center;
+            background: white;
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            width: 90%;
+            max-width: 400px;
+        }
+
+        /* 1. 인트로 화면 */
+        #intro-screen { display: block; }
+        h1 { color: #333; font-size: 1.5rem; margin-bottom: 2rem; }
+        
+        /* 2. 메인 뽑기 화면 */
+        #main-screen { display: none; }
+        
+        /* 로또 기계 느낌의 원형 */
+        .machine-visual {
+            width: 150px;
+            height: 150px;
+            background: var(--secondary-color);
+            border: 8px solid #ff9f43;
+            border-radius: 50%;
+            margin: 0 auto 1.5rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #result-display {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #d35400;
+            z-index: 2;
+        }
+
+        /* 버튼 스타일링 */
+        button {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 30px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+            margin: 5px;
+        }
+
+        button:hover { background: #ee5253; transform: scale(1.05); }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+
+        .btn-select { background: #1dd1a1; }
+        .btn-select:hover { background: #10ac84; }
+
+        /* 애니메이션 효과 */
+        .shake { animation: shake 0.5s infinite; }
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            20% { transform: translate(-3px, 0px) rotate(-1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            100% { transform: translate(1px, -2px) rotate(1deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="intro-screen" class="container">
+        <h1>환영합니다.<br>월별 형용사를 뽑아주세요.</h1>
+        <button onclick="enterMachine()">입장하기</button>
+    </div>
+
+    <div id="main-screen" class="container">
+        <div class="machine-visual" id="machine">
+            <div id="result-display">?</div>
+        </div>
+        <p id="status-msgText">버튼을 눌러 형용사를 뽑으세요!</p>
+        
+        <div class="controls">
+            <button id="draw-btn" onclick="startDraw()">뽑기 시작!</button>
+            <button id="select-btn" class="btn-select" onclick="selectWord()" style="display: none;">이 단어로 선택하기</button>
+        </div>
+        <p style="font-size: 0.8rem; color: #888; margin-top: 15px;">남은 형용사 수: <span id="count">20</span></p>
+    </div>
+
+    <script>
+        // 20개의 형용사 리스트
+        let adjectives = [
+            '어여쁜', '사랑스러운', '찬란한', '소란스러운', '영롱한', 
+            '신비로운', '평온한', '강렬한', '포근한', '싱그러운',
+            '눈부신', '우아한', '몽환적인', '당당한', '따사로운',
+            '명랑한', '담백한', '숭고한', '순수한', '고귀한'
+        ];
+
+        let currentWord = "";
+        let isRolling = false;
+
+        const introScreen = document.getElementById('intro-screen');
+        const mainScreen = document.getElementById('main-screen');
+        const resultDisplay = document.getElementById('result-display');
+        const machine = document.getElementById('machine');
+        const selectBtn = document.getElementById('select-btn');
+        const countDisplay = document.getElementById('count');
+
+        function enterMachine() {
+            introScreen.style.display = 'none';
+            mainScreen.style.display = 'block';
+            updateCount();
+        }
+
+        function updateCount() {
+            countDisplay.innerText = adjectives.length;
+        }
+
+        function startDraw() {
+            if (adjectives.length === 0) {
+                alert("모든 형용사가 선택되었습니다!");
+                return;
+            }
+
+            isRolling = true;
+            machine.classList.add('shake');
+            selectBtn.style.display = 'none';
+            
+            let counter = 0;
+            let shuffleInterval = setInterval(() => {
+                const tempIndex = Math.floor(Math.random() * adjectives.length);
+                resultDisplay.innerText = adjectives[tempIndex];
+                counter++;
+
+                if (counter > 15) { // 1.5초 정도 셔플
+                    clearInterval(shuffleInterval);
+                    stopDraw();
+                }
+            }, 100);
+        }
+
+        function stopDraw() {
+            machine.classList.remove('shake');
+            const finalIndex = Math.floor(Math.random() * adjectives.length);
+            currentWord = adjectives[finalIndex];
+            resultDisplay.innerText = currentWord;
+            
+            isRolling = false;
+            selectBtn.style.display = 'inline-block';
+        }
+
+        function selectWord() {
+            if (confirm(`'${currentWord}'(을)를 나의 형용사로 선택하시겠습니까? 선택 후에는 다른 사람이 고를 수 없습니다.`)) {
+                // 리스트에서 제거
+                adjectives = adjectives.filter(word => word !== currentWord);
+                alert(`축하합니다! '${currentWord}'가 당신의 단어가 되었습니다.`);
+                
+                // 초기화
+                resultDisplay.innerText = "?";
+                selectBtn.style.display = 'none';
+                updateCount();
+
+                if (adjectives.length === 0) {
+                    resultDisplay.innerText = "종료";
+                    document.getElementById('draw-btn').disabled = true;
+                }
+            }
+        }
+    </script>
+</body>
+</html>
