@@ -69,4 +69,56 @@
         db.ref('words').on('value', (snapshot) => {
             const data = snapshot.val();
             if (!data) {
-                const initialWords = ['어여쁜', '사랑스러운', '찬란한', '소란스러운', '영롱한', '신비로운', '평온한', '강렬한', '포근한', '싱그러운', '눈부신', '우아한', '몽환적인', '당당한', '따사로운', '명랑한', '담백한
+                const initialWords = ['어여쁜', '사랑스러운', '찬란한', '소란스러운', '영롱한', '신비로운', '평온한', '강렬한', '포근한', '싱그러운', '눈부신', '우아한', '몽환적인', '당당한', '따사로운', '명랑한', '담백한', '숭고한', '순수한', '고귀한'];
+                db.ref('words').set(initialWords);
+                return;
+            }
+            adjectives = data;
+            countDisplay.innerText = adjectives.length;
+        });
+
+        function enterMachine() {
+            document.getElementById('intro-screen').style.display = 'none';
+            document.getElementById('main-screen').style.display = 'block';
+        }
+
+        function startDraw() {
+            if (adjectives.length === 0) {
+                alert("남은 형용사가 없습니다.");
+                return;
+            }
+            machine.classList.add('shake');
+            selectBtn.style.display = 'none';
+            let counter = 0;
+            let shuffleInterval = setInterval(() => {
+                const tempIndex = Math.floor(Math.random() * adjectives.length);
+                resultDisplay.innerText = adjectives[tempIndex];
+                counter++;
+                if (counter > 15) {
+                    clearInterval(shuffleInterval);
+                    stopDraw();
+                }
+            }, 100);
+        }
+
+        function stopDraw() {
+            machine.classList.remove('shake');
+            const finalIndex = Math.floor(Math.random() * adjectives.length);
+            currentWord = adjectives[finalIndex];
+            resultDisplay.innerText = currentWord;
+            selectBtn.style.display = 'inline-block';
+        }
+
+        function selectWord() {
+            if (confirm(`'${currentWord}'를 선택할까요? 선택 후에는 사라집니다.`)) {
+                const updatedList = adjectives.filter(word => word !== currentWord);
+                db.ref('words').set(updatedList).then(() => {
+                    alert(`선택되었습니다!`);
+                    resultDisplay.innerText = "?";
+                    selectBtn.style.display = 'none';
+                });
+            }
+        }
+    </script>
+</body>
+</html>
