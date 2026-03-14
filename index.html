@@ -1,95 +1,72 @@
-<script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>월별 형용사 뽑기</title>
+    <style>
+        :root { --primary-color: #ff6b6b; --secondary-color: #feca57; --bg-color: #f7f1e3; }
+        body { font-family: 'Pretendard', sans-serif; background-color: var(--bg-color); display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; overflow: hidden; }
+        .container { text-align: center; background: white; padding: 2rem; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 90%; max-width: 400px; }
+        #intro-screen { display: block; }
+        #main-screen { display: none; }
+        .machine-visual { width: 150px; height: 150px; background: var(--secondary-color); border: 8px solid #ff9f43; border-radius: 50%; margin: 0 auto 1.5rem; display: flex; justify-content: center; align-items: center; position: relative; overflow: hidden; }
+        #result-display { font-size: 1.5rem; font-weight: bold; color: #d35400; z-index: 2; }
+        button { background: var(--primary-color); color: white; border: none; padding: 12px 25px; border-radius: 30px; font-size: 1rem; cursor: pointer; transition: transform 0.2s, background 0.2s; margin: 5px; }
+        button:hover { background: #ee5253; transform: scale(1.05); }
+        .btn-select { background: #1dd1a1; }
+        .shake { animation: shake 0.5s infinite; }
+        @keyframes shake { 0% { transform: translate(1px, 1px) rotate(0deg); } 20% { transform: translate(-3px, 0px) rotate(-1deg); } 50% { transform: translate(-1px, 2px) rotate(-1deg); } 100% { transform: translate(1px, -2px) rotate(1deg); } }
+    </style>
+</head>
+<body>
 
-<script>
-  // 2. 파이어베이스 설정 (사용자님의 정보를 넣었습니다)
-  const firebaseConfig = {
-    apiKey: "AIzaSyB0fYqqVIcSnZI34Qk5AldPAKCiwK7fb60",
-    authDomain: "hangeul-love-club.firebaseapp.com",
-    projectId: "hangeul-love-club",
-    storageBucket: "hangeul-love-club.firebasestorage.app",
-    messagingSenderId: "983798363707",
-    appId: "1:983798363707:web:0c9710c2ac5f4b82ec0e1e",
-    measurementId: "G-RCPVETCQB0",
-    // ★ 중요: DB 주소를 여기에 직접 추가했습니다.
-    databaseURL: "https://hangeul-love-club-default-rtdb.firebaseio.com"
-  };
+    <div id="intro-screen" class="container">
+        <h1>환영합니다.<br>월별 형용사를 뽑아주세요.</h1>
+        <button onclick="enterMachine()">입장하기</button>
+    </div>
 
-  // Firebase 시작
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
+    <div id="main-screen" class="container">
+        <div class="machine-visual" id="machine">
+            <div id="result-display">?</div>
+        </div>
+        <p>버튼을 눌러 형용사를 뽑으세요!</p>
+        <div class="controls">
+            <button id="draw-btn" onclick="startDraw()">뽑기 시작!</button>
+            <button id="select-btn" class="btn-select" onclick="selectWord()" style="display: none;">선택하기</button>
+        </div>
+        <p style="font-size: 0.8rem; color: #888; margin-top: 15px;">남은 형용사 수: <span id="count">0</span></p>
+    </div>
 
-  let adjectives = [];
-  let currentWord = "";
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
 
-  const resultDisplay = document.getElementById('result-display');
-  const selectBtn = document.getElementById('select-btn');
-  const countDisplay = document.getElementById('count');
-  const machine = document.getElementById('machine');
+    <script>
+        // 파이어베이스 설정
+        const firebaseConfig = {
+            apiKey: "AIzaSyB0fYqqVIcSnZI34Qk5AldPAKCiwK7fb60",
+            authDomain: "hangeul-love-club.firebaseapp.com",
+            projectId: "hangeul-love-club",
+            storageBucket: "hangeul-love-club.firebasestorage.app",
+            messagingSenderId: "983798363707",
+            appId: "1:983798363707:web:0c9710c2ac5f4b82ec0e1e",
+            measurementId: "G-RCPVETCQB0",
+            databaseURL: "https://hangeul-love-club-default-rtdb.firebaseio.com"
+        };
 
-  // [기능 1] DB에서 실시간으로 단어 목록 가져오기
-  db.ref('words').on('value', (snapshot) => {
-    const data = snapshot.val();
-    
-    // DB가 완전히 비어있을 때만 최초 1회 20개를 생성합니다.
-    if (!data) {
-      const initialWords = ['어여쁜', '사랑스러운', '찬란한', '소란스러운', '영롱한', '신비로운', '평온한', '강렬한', '포근한', '싱그러운', '눈부신', '우아한', '몽환적인', '당당한', '따사로운', '명랑한', '담백한', '숭고한', '순수한', '고귀한'];
-      db.ref('words').set(initialWords);
-      return;
-    }
-    
-    adjectives = data;
-    countDisplay.innerText = adjectives.length;
-  });
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
 
-  // [기능 2] 뽑기 시작
-  function startDraw() {
-    if (adjectives.length === 0) {
-      alert("모든 형용사가 동이 났어요!");
-      return;
-    }
-    machine.classList.add('shake');
-    selectBtn.style.display = 'none';
-    
-    let counter = 0;
-    let shuffleInterval = setInterval(() => {
-      const tempIndex = Math.floor(Math.random() * adjectives.length);
-      resultDisplay.innerText = adjectives[tempIndex];
-      counter++;
-      if (counter > 15) {
-        clearInterval(shuffleInterval);
-        stopDraw();
-      }
-    }, 100);
-  }
+        let adjectives = [];
+        let currentWord = "";
 
-  function stopDraw() {
-    machine.classList.remove('shake');
-    const finalIndex = Math.floor(Math.random() * adjectives.length);
-    currentWord = adjectives[finalIndex];
-    resultDisplay.innerText = currentWord;
-    selectBtn.style.display = 'inline-block';
-  }
+        const resultDisplay = document.getElementById('result-display');
+        const selectBtn = document.getElementById('select-btn');
+        const countDisplay = document.getElementById('count');
+        const machine = document.getElementById('machine');
 
-  // [기능 3] 단어 선택하기 (핵심: DB에서 영구 삭제)
-  function selectWord() {
-    if (confirm(`'${currentWord}'를 선택하시겠습니까? 선택 후에는 다른 사람이 고를 수 없습니다.`)) {
-      // 목록에서 현재 단어 제외
-      const updatedList = adjectives.filter(word => word !== currentWord);
-      
-      // DB에 업데이트된 목록 저장 (이 코드가 실행되면 다른 사람 화면에서도 즉시 사라짐)
-      db.ref('words').set(updatedList).then(() => {
-        alert(`축하합니다! '${currentWord}'가 당신의 단어가 되었습니다.`);
-        resultDisplay.innerText = "?";
-        selectBtn.style.display = 'none';
-      }).catch((error) => {
-        alert("저장에 실패했습니다: " + error.message);
-      });
-    }
-  }
-
-  function enterMachine() {
-    document.getElementById('intro-screen').style.display = 'none';
-    document.getElementById('main-screen').style.display = 'block';
-  }
-</script>
+        // 데이터베이스 감시
+        db.ref('words').on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (!data) {
+                const initialWords = ['어여쁜', '사랑스러운', '찬란한', '소란스러운', '영롱한', '신비로운', '평온한', '강렬한', '포근한', '싱그러운', '눈부신', '우아한', '몽환적인', '당당한', '따사로운', '명랑한', '담백한
