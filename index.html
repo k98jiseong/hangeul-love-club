@@ -3,75 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>한사클 출사가기</title>
+    <title>출사 팀 빌딩 현황판</title>
     
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
-    <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.0/kakao.min.js"></script>
 
     <style>
         :root {
-            --primary: #203864; /* 메인 네이비 */
-            --accent: #e67e22; /* 포인트 오렌지 */
-            --bg: #f8f9fa;
-            --success: #27ae60;
+            --primary: #203864; --accent: #e67e22; --bg: #f8f9fa; --success: #27ae60;
         }
-
         body {
             font-family: 'Pretendard', -apple-system, sans-serif;
             margin: 0; background: var(--bg);
-            display: flex; justify-content: center; align-items: center; min-height: 100vh;
+            display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 20px;
         }
-
         .container {
-            width: 90%; max-width: 450px; background: white;
+            width: 100%; max-width: 450px; background: white;
             padding: 2rem; border-radius: 24px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1); text-align: center;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1); text-align: center; margin-bottom: 20px;
         }
-
         .step { display: none; }
         .step.active { display: block; animation: fadeIn 0.5s; }
-
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        h2 { color: var(--primary); margin-bottom: 1.5rem; font-size: 1.4rem; }
-
+        h2 { color: var(--primary); margin-bottom: 1.5rem; }
         .options { display: flex; flex-direction: column; gap: 12px; margin-bottom: 1.5rem; }
-        .card {
-            padding: 16px; border: 2px solid #eee; border-radius: 12px;
-            cursor: pointer; transition: all 0.2s; font-weight: 500;
-        }
-        .card:hover { background: #f0f4f8; }
+        .card { padding: 16px; border: 2px solid #eee; border-radius: 12px; cursor: pointer; font-weight: 500; }
         .card:has(input:checked) { border-color: var(--primary); background: #f0f4f8; }
+        input[type="radio"], input[type="text"] { width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 10px; margin-bottom: 1rem; box-sizing: border-box; }
         input[type="radio"] { display: none; }
 
-        input[type="text"] {
-            width: 100%; padding: 14px; border: 1px solid #ddd;
-            border-radius: 10px; margin-bottom: 1rem; box-sizing: border-box;
-        }
-
-        button {
-            width: 100%; padding: 16px; border: none; border-radius: 12px;
-            background: var(--primary); color: white; font-weight: bold;
-            font-size: 1rem; cursor: pointer; transition: 0.3s;
-        }
-        button:disabled { background: #ccc; cursor: not-allowed; }
-        button:active { transform: scale(0.98); }
-
-        /* 멈춤 버튼 전용 스타일 */
+        button { width: 100%; padding: 16px; border: none; border-radius: 12px; background: var(--primary); color: white; font-weight: bold; cursor: pointer; }
         #stop-btn { background: var(--accent); margin-top: 10px; }
 
+        /* 룰렛 스타일 */
         #roulette-box {
-            width: 140px; height: 140px; line-height: 140px;
-            margin: 30px auto; border-radius: 50%;
-            background: var(--accent); color: white; font-size: 2.2rem; font-weight: 800;
-            box-shadow: 0 0 20px rgba(230, 126, 34, 0.4);
+            width: 120px; height: 120px; line-height: 120px; margin: 20px auto; border-radius: 50%;
+            background: var(--accent); color: white; font-size: 2rem; font-weight: 800;
             animation: spin 0.15s infinite linear;
         }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        #roulette-box.stop { animation: none; background: var(--success); box-shadow: 0 0 20px rgba(39, 174, 96, 0.4); }
+        #roulette-box.stop { animation: none; background: var(--success); }
 
-        #kakao-btn { background: #FEE500; color: #191919; margin-top: 10px; }
+        /* 랭킹판(현황판) 스타일 */
+        .ranking-container {
+            width: 100%; max-width: 450px; background: white; padding: 1.5rem; border-radius: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 12px; border-bottom: 1px solid #eee; text-align: center; font-size: 0.9rem; }
+        th { background: #f4f7f9; color: var(--primary); }
+        .team-tag { padding: 4px 8px; border-radius: 6px; font-weight: bold; font-size: 0.8rem; color: white; }
+        .A { background: #3498db; } .B { background: #9b59b6; } .C { background: #e74c3c; }
     </style>
 </head>
 <body>
@@ -84,53 +66,53 @@
             <label class="card"><input type="radio" name="location" value="남산서울타워"><span>남산서울타워</span></label>
             <label class="card"><input type="radio" name="location" value="덕수궁"><span>덕수궁</span></label>
         </div>
-        <button onclick="goNext(2)" id="voteBtn" disabled>투표 완료</button>
+        <button onclick="goNext(2)" id="voteBtn" disabled>다음 단계</button>
     </section>
 
     <section id="step2" class="step">
         <h2>성함을 입력해 주세요</h2>
-        <input type="text" id="userName" placeholder="홍길동" maxlength="10">
+        <input type="text" id="userName" placeholder="이름 입력" maxlength="10">
         <button onclick="assignTeam()">팀 배정 시작</button>
     </section>
 
     <section id="step3" class="step">
         <div id="roulette-box">?</div>
         <p id="loading-text">운명의 팀을 고르는 중...</p>
-        
         <button id="stop-btn" style="display:none;" onclick="handleStop()">지금 멈추기!</button>
-
         <div id="result-content" style="display:none;">
             <h2 id="display-team"></h2>
-            <p id="display-loc" style="color:#666; margin-bottom:20px;"></p>
-            <button id="kakao-btn" onclick="sendKakao()">카카오톡으로 공유하기</button>
+            <button onclick="location.reload()">새로고침</button>
         </div>
     </section>
 </div>
 
+<div class="ranking-container">
+    <h3 style="margin-top:0; color:var(--primary);">📊 실시간 팀 배정 현황</h3>
+    <table>
+        <thead>
+            <tr><th>이름</th><th>장소</th><th>확정 팀</th></tr>
+        </thead>
+        <tbody id="ranking-body">
+            <tr><td colspan="3">데이터를 불러오는 중...</td></tr>
+        </tbody>
+    </table>
+</div>
+
 <script>
-    // 1. 설정 정보 (본인의 것으로 변경 필수)
+    // 1. 본인의 Firebase 설정값을 여기에 정확히 넣으세요!
     const firebaseConfig = {
-         apiKey: "AIzaSyB0fYqqVIcSnZI34Qk5AldPAKCiwK7fb60",
-  authDomain: "hangeul-love-club.firebaseapp.com",
-  databaseURL: "https://hangeul-love-club-default-rtdb.firebaseio.com",
-  projectId: "hangeul-love-club",
-  storageBucket: "hangeul-love-club.firebasestorage.app",
-  messagingSenderId: "983798363707",
-  appId: "1:983798363707:web:0c9710c2ac5f4b82ec0e1e",
-  measurementId: "G-RCPVETCQB0"
+        apiKey: "YOUR_API_KEY",
+        authDomain: "hangeul-love-club.firebaseapp.com",
+        databaseURL: "https://hangeul-love-club-default-rtdb.firebaseio.com",
+        projectId: "hangeul-love-club",
+        appId: "YOUR_APP_ID"
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-    
-    if (!Kakao.isInitialized()) Kakao.init('YOUR_KAKAO_JS_KEY');
 
-    let state = {
-        name: "",
-        location: "",
-        team: ""
-    };
+    let state = { name: "", location: "", team: "" };
 
-    // 장소 선택 체크
+    // 장소 선택 이벤트
     document.querySelectorAll('input[name="location"]').forEach(el => {
         el.addEventListener('change', (e) => {
             state.location = e.target.value;
@@ -143,90 +125,61 @@
         document.getElementById(`step${num}`).classList.add('active');
     }
 
-    // 팀 배정 로직 시작
+    // 팀 배정 시작
     async function assignTeam() {
         state.name = document.getElementById('userName').value.trim();
-        if(!state.name) return alert("이름을 입력해 주세요!");
-
+        if(!state.name) return alert("이름을 입력하세요!");
         goNext(3);
         
-        // 데이터 불러오기 및 배정 가능 팀 확인
-        try {
-            const snapshot = await db.ref('users').once('value');
-            const users = snapshot.val() ? Object.values(snapshot.val()) : [];
-            
-            const counts = { 'A조': 0, 'B조': 0, 'C조': 0 };
-            users.forEach(u => { if(counts[u.team] !== undefined) counts[u.team]++; });
+        const snapshot = await db.ref('users').once('value');
+        const users = snapshot.val() ? Object.values(snapshot.val()) : [];
+        const counts = { 'A조': 0, 'B조': 0, 'C조': 0 };
+        users.forEach(u => { if(counts[u.team] !== undefined) counts[u.team]++; });
 
-            const limits = { 'A조': 3, 'B조': 3, 'C조': 2 };
-            const available = Object.keys(limits).filter(t => counts[t] < limits[t]);
+        const limits = { 'A조': 3, 'B조': 3, 'C조': 2 };
+        const available = Object.keys(limits).filter(t => counts[t] < limits[t]);
 
-            if(available.length === 0) {
-                alert("8명 정원이 모두 찼습니다!");
-                location.reload();
-                return;
-            }
-
-            // 결과값 선배정 (표시는 멈춤 버튼 누를 때)
-            state.team = available[Math.floor(Math.random() * available.length)];
-            
-            // 멈춤 버튼 표시
-            document.getElementById('stop-btn').style.display = 'block';
-
-        } catch(e) {
-            alert("데이터 연결 오류가 발생했습니다.");
-            console.error(e);
-        }
+        if(available.length === 0) return alert("정원이 찼습니다!");
+        state.team = available[Math.floor(Math.random() * available.length)];
+        document.getElementById('stop-btn').style.display = 'block';
     }
 
-    // 멈춤 버튼 클릭 시 처리
+    // 멈춤 및 저장
     async function handleStop() {
         document.getElementById('stop-btn').style.display = 'none';
+        await db.ref('users').push({
+            name: state.name, location: state.location, team: state.team, date: new Date().toISOString()
+        });
         
-        try {
-            // DB 저장
-            await db.ref('users').push({
-                name: state.name,
-                location: state.location,
-                team: state.team,
-                date: new Date().toISOString()
-            });
-
-            // 결과 연출
-            showFinalResult();
-        } catch(e) {
-            alert("저장 중 오류가 발생했습니다.");
-        }
-    }
-
-    function showFinalResult() {
         const box = document.getElementById('roulette-box');
-        box.classList.add('stop');
-        box.innerText = state.team;
-        
+        box.classList.add('stop'); box.innerText = state.team;
         document.getElementById('loading-text').style.display = 'none';
         document.getElementById('result-content').style.display = 'block';
-        document.getElementById('display-team').innerText = `${state.name}님은 [${state.team}] 입니다!`;
-        document.getElementById('display-loc').innerText = `장소: ${state.location}`;
+        document.getElementById('display-team').innerText = `${state.name}님은 ${state.team}입니다!`;
     }
 
-    function sendKakao() {
-        Kakao.Share.sendDefault({
-            objectType: 'feed',
-            content: {
-                title: '📷 출사 팀 배정 결과',
-                description: `${state.name}님: ${state.location} (${state.team})`,
-                imageUrl: 'https://cdn-icons-png.flaticon.com/512/1042/1042339.png',
-                link: { mobileWebUrl: window.location.href, webUrl: window.location.href },
-            },
-            buttons: [{ title: '결과 확인하기', link: { mobileWebUrl: window.location.href, webUrl: window.location.href } }]
+    // 실시간 현황 업데이트 (랭킹판)
+    db.ref('users').on('value', (snapshot) => {
+        const data = snapshot.val();
+        const tbody = document.getElementById('ranking-body');
+        tbody.innerHTML = "";
+
+        if(!data) {
+            tbody.innerHTML = "<tr><td colspan='3'>아직 참여자가 없습니다.</td></tr>";
+            return;
+        }
+
+        const sorted = Object.values(data).sort((a, b) => new Date(b.date) - new Date(a.date));
+        sorted.forEach(user => {
+            const teamClass = user.team === 'A조' ? 'A' : (user.team === 'B조' ? 'B' : 'C');
+            tbody.innerHTML += `
+                <tr>
+                    <td>${user.name}</td>
+                    <td>${user.location}</td>
+                    <td><span class="team-tag ${teamClass}">${user.team}</span></td>
+                </tr>`;
         });
-    }
-
-if (!Kakao.isInitialized()) {
-    Kakao.init('7bd11fca5b426f40a04dd573a8c5d797'); // 보여주신 키 그대로 입력
-}
+    });
 </script>
-
 </body>
 </html>
