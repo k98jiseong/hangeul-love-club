@@ -75,6 +75,9 @@
         td { padding: 18px 5px; border-bottom: 1px solid #f8f9fa; font-size: 1rem; text-align: center; }
         .team-tag { padding: 6px 12px; border-radius: 10px; font-weight: 800; font-size: 0.8rem; color: #fff; }
         .A { background: #3498db; } .B { background: #9b59b6; } .C { background: #e74c3c; }
+
+        /* 강조 색상 스타일 */
+        .highlight-name { color: var(--accent); font-weight: 800; }
     </style>
 </head>
 <body>
@@ -92,7 +95,9 @@
 
     <section id="step2" class="step">
         <h2>👤 성함을 알려주세요</h2>
-        <input type="text" id="userName" class="input-field" placeholder="여기에 성함 입력" maxlength="10">
+        <input type="text" id="userName" class="input-field" 
+               placeholder="이름 입력" maxlength="10" 
+               onfocus="this.placeholder=''" onblur="this.placeholder='이름 입력'">
         <button onclick="assignTeam()">팀 배정 시작하기</button>
     </section>
 
@@ -109,7 +114,7 @@
 </div>
 
 <div id="ranking-section" class="ranking-container">
-    <h3 style="margin-top:0; color:var(--primary); text-align:center; font-size:1.2rem; margin-bottom:20px;">📊 팀 배정 현황</h3>
+    <h3 style="margin-top:0; color:var(--primary); text-align:center; font-size:1.2rem; margin-bottom:20px;">📊 실시간 투표 및 배정 현황</h3>
     <table>
         <thead>
             <tr><th>이름</th><th>장소</th><th>팀</th></tr>
@@ -119,7 +124,7 @@
 </div>
 
 <script>
-    // 1. Firebase 설정 (본인 것으로 유지!)
+    // 1. Firebase 설정 (본인의 정보를 입력하세요)
     const firebaseConfig = {
         apiKey: "YOUR_API_KEY",
         authDomain: "hangeul-love-club.firebaseapp.com",
@@ -164,7 +169,6 @@
                 return;
             }
 
-            // ★ 진짜 랜덤 로직: 배열 셔플 (Fisher-Yates)
             for (let i = available.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [available[i], available[j]] = [available[j], available[i]];
@@ -186,7 +190,9 @@
         box.innerText = state.team;
         document.getElementById('loading-text').style.display = 'none';
         document.getElementById('result-content').style.display = 'block';
-        document.getElementById('display-team').innerText = `${state.name}님은 ${state.team}!`;
+        
+        // 수정 2: 이름 강조 컬러 적용
+        document.getElementById('display-team').innerHTML = `<span class="highlight-name">${state.name}</span>님은 ${state.team}!`;
         document.getElementById('ranking-section').style.display = 'block';
     }
 
@@ -194,7 +200,24 @@
         const data = snapshot.val();
         const tbody = document.getElementById('ranking-body');
         if(!data) return;
-        const sorted = Object.values(data).sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        const usersArray = Object.values(data);
+
+        // 수정 1: 장소 투표가 많은 순서대로 정렬
+        // 1. 장소별 득표수 계산
+        const locationCounts = {};
+        usersArray.forEach(u => {
+            locationCounts[u.location] = (locationCounts[u.location] || 0) + 1;
+        });
+
+        // 2. 정렬 로직: 투표수가 높은 장소가 먼저 오고, 투표수가 같으면 최신순 정렬
+        const sorted = usersArray.sort((a, b) => {
+            if (locationCounts[b.location] !== locationCounts[a.location]) {
+                return locationCounts[b.location] - locationCounts[a.location];
+            }
+            return new Date(b.date) - new Date(a.date);
+        });
+
         tbody.innerHTML = sorted.map(user => {
             const tc = user.team === 'A조' ? 'A' : (user.team === 'B조' ? 'B' : 'C');
             return `<tr><td>${user.name}</td><td>${user.location}</td><td><span class="team-tag ${tc}">${user.team}</span></td></tr>`;
