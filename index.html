@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>출사 팀 빌딩</title>
+    <title>한사클 출사가기</title>
     
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
@@ -133,14 +133,14 @@
     </section>
 
     <section id="step2" class="step">
-        <h2>👤 성함을 알려주세요</h2>
+        <h2>👤 성함을 입력해주세요</h2>
         <input type="text" id="userName" class="input-field" placeholder="여기에 성함 입력" maxlength="10">
         <button onclick="assignTeam()">팀 배정 시작하기</button>
     </section>
 
     <section id="step3" class="step">
         <div id="roulette-box">?</div>
-        <p id="loading-text" style="font-weight:600; color:#888;">팀을 추첨하는 중입니다...</p>
+        <p id="loading-text" style="font-weight:600; color:#888;">운명의 팀 추첨 중...</p>
         <button id="stop-btn" style="display:none;" onclick="handleStop()">지금 멈추기!</button>
         
         <div id="result-content" style="display:none;">
