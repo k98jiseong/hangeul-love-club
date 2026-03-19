@@ -11,6 +11,7 @@
     <style>
         :root {
             --primary: #203864; --accent: #e67e22; --bg: #f2f4f7; --white: #ffffff; --success: #27ae60;
+            --team-a: #3498db; --team-b: #9b59b6; --team-c: #e74c3c;
         }
 
         body {
@@ -24,7 +25,7 @@
             width: 100%; max-width: 420px; background: var(--white);
             padding: 40px 30px; border-radius: 30px;
             box-shadow: 0 15px 40px rgba(32, 56, 100, 0.12);
-            text-align: center; margin-bottom: 30px; box-sizing: border-box;
+            text-align: center; margin-bottom: 25px; box-sizing: border-box;
         }
 
         h2 { font-size: 1.4rem; color: var(--primary); margin-top: 0; margin-bottom: 2rem; }
@@ -64,19 +65,33 @@
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         #roulette-box.stop { animation: none; background: var(--success); }
 
+        /* 그룹별 팀원 보기 스타일 */
+        .team-summary {
+            display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px;
+        }
+        .team-box {
+            background: #fff; padding: 15px 5px; border-radius: 20px; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.03); border-top: 5px solid #ccc;
+        }
+        .team-box.a-border { border-top-color: var(--team-a); }
+        .team-box.b-border { border-top-color: var(--team-b); }
+        .team-box.c-border { border-top-color: var(--team-c); }
+        
+        .team-title { font-size: 0.85rem; font-weight: 800; margin-bottom: 8px; color: #555; }
+        .member-list { font-size: 0.9rem; color: #333; line-height: 1.6; min-height: 50px; }
+
         .ranking-container {
             display: none; width: 100%; max-width: 420px;
             background: var(--white); padding: 30px 20px; border-radius: 30px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.05); box-sizing: border-box; margin-bottom: 40px;
         }
         
-        table { width: 100%; border-collapse: collapse; }
-        th { font-size: 0.85rem; color: #999; padding-bottom: 15px; border-bottom: 2px solid #f8f9fa; }
-        td { padding: 18px 5px; border-bottom: 1px solid #f8f9fa; font-size: 1rem; text-align: center; }
-        .team-tag { padding: 6px 12px; border-radius: 10px; font-weight: 800; font-size: 0.8rem; color: #fff; }
-        .A { background: #3498db; } .B { background: #9b59b6; } .C { background: #e74c3c; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { font-size: 0.8rem; color: #999; padding-bottom: 12px; border-bottom: 2px solid #f8f9fa; }
+        td { padding: 15px 5px; border-bottom: 1px solid #f8f9fa; font-size: 0.95rem; text-align: center; }
+        .team-tag { padding: 4px 10px; border-radius: 8px; font-weight: 800; font-size: 0.75rem; color: #fff; }
+        .A { background: var(--team-a); } .B { background: var(--team-b); } .C { background: var(--team-c); }
 
-        /* 강조 색상 스타일 */
         .highlight-name { color: var(--accent); font-weight: 800; }
     </style>
 </head>
@@ -114,7 +129,25 @@
 </div>
 
 <div id="ranking-section" class="ranking-container">
-    <h3 style="margin-top:0; color:var(--primary); text-align:center; font-size:1.2rem; margin-bottom:20px;">📊 실시간 투표 및 배정 현황</h3>
+    <h3 style="margin-top:0; color:var(--primary); text-align:center; font-size:1.1rem; margin-bottom:20px;">👥 팀별 멤버 현황</h3>
+    
+    <div class="team-summary">
+        <div class="team-box a-border">
+            <div class="team-title" style="color:var(--team-a)">A조</div>
+            <div id="list-A" class="member-list"></div>
+        </div>
+        <div class="team-box b-border">
+            <div class="team-title" style="color:var(--team-b)">B조</div>
+            <div id="list-B" class="member-list"></div>
+        </div>
+        <div class="team-box c-border">
+            <div class="team-title" style="color:var(--team-c)">C조</div>
+            <div id="list-C" class="member-list"></div>
+        </div>
+    </div>
+
+    <hr style="border:0; border-top:1px solid #eee; margin:25px 0;">
+    <h3 style="color:var(--primary); text-align:center; font-size:1.1rem;">📊 전체 투표 현황</h3>
     <table>
         <thead>
             <tr><th>이름</th><th>장소</th><th>팀</th></tr>
@@ -124,7 +157,7 @@
 </div>
 
 <script>
-    // 1. Firebase 설정 (본인의 정보를 입력하세요)
+    // Firebase 설정 유지
     const firebaseConfig = {
         apiKey: "YOUR_API_KEY",
         authDomain: "hangeul-love-club.firebaseapp.com",
@@ -174,7 +207,6 @@
                 [available[i], available[j]] = [available[j], available[i]];
             }
             state.team = available[0];
-
             document.getElementById('stop-btn').style.display = 'block';
         } catch(e) { alert("데이터 연결 중 오류 발생"); }
     }
@@ -190,27 +222,32 @@
         box.innerText = state.team;
         document.getElementById('loading-text').style.display = 'none';
         document.getElementById('result-content').style.display = 'block';
-        
-        // 수정 2: 이름 강조 컬러 적용
         document.getElementById('display-team').innerHTML = `<span class="highlight-name">${state.name}</span>님은 ${state.team}!`;
         document.getElementById('ranking-section').style.display = 'block';
     }
 
     db.ref('users').on('value', (snapshot) => {
         const data = snapshot.val();
-        const tbody = document.getElementById('ranking-body');
         if(!data) return;
 
         const usersArray = Object.values(data);
+        
+        // 1. 간결한 팀별 명단 업데이트
+        const teams = { 'A조': [], 'B조': [], 'C조': [] };
+        usersArray.forEach(u => {
+            if(teams[u.team]) teams[u.team].push(u.name);
+        });
+        
+        document.getElementById('list-A').innerHTML = teams['A조'].join('<br>') || '-';
+        document.getElementById('list-B').innerHTML = teams['B조'].join('<br>') || '-';
+        document.getElementById('list-C').innerHTML = teams['C조'].join('<br>') || '-';
 
-        // 수정 1: 장소 투표가 많은 순서대로 정렬
-        // 1. 장소별 득표수 계산
+        // 2. 전체 투표 현황 (장소 득표순 정렬)
         const locationCounts = {};
         usersArray.forEach(u => {
             locationCounts[u.location] = (locationCounts[u.location] || 0) + 1;
         });
 
-        // 2. 정렬 로직: 투표수가 높은 장소가 먼저 오고, 투표수가 같으면 최신순 정렬
         const sorted = usersArray.sort((a, b) => {
             if (locationCounts[b.location] !== locationCounts[a.location]) {
                 return locationCounts[b.location] - locationCounts[a.location];
@@ -218,7 +255,7 @@
             return new Date(b.date) - new Date(a.date);
         });
 
-        tbody.innerHTML = sorted.map(user => {
+        document.getElementById('ranking-body').innerHTML = sorted.map(user => {
             const tc = user.team === 'A조' ? 'A' : (user.team === 'B조' ? 'B' : 'C');
             return `<tr><td>${user.name}</td><td>${user.location}</td><td><span class="team-tag ${tc}">${user.team}</span></td></tr>`;
         }).join('');
