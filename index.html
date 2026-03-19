@@ -207,8 +207,19 @@
                 return;
             }
             state.team = available[Math.floor(Math.random() * available.length)];
-            document.getElementById('stop-btn').style.display = 'block';
-        } catch(e) { alert("데이터 연결 중 오류 발생"); }
+            // ... 기존 코드 중 available 변수 정의 바로 아래부터 교체 ...
+
+// 1. 후보 팀들을 무작위로 한 번 더 뒤섞습니다 (Fisher-Yates Shuffle)
+for (let i = available.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [available[i], available[j]] = [available[j], available[i]];
+}
+
+// 2. 뒤섞인 후보군 중 첫 번째 팀을 선택합니다.
+state.team = available[0];
+
+// 3. 멈춤 버튼 표시
+document.getElementById('stop-btn').style.display = 'block';
     }
 
     async function handleStop() {
