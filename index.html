@@ -65,20 +65,24 @@
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         #roulette-box.stop { animation: none; background: var(--success); }
 
-        /* 그룹별 팀원 보기 스타일 */
+        /* 팀원 보기 섹션 - 중앙 정렬 반영 */
         .team-summary {
             display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px;
         }
         .team-box {
             background: #fff; padding: 15px 5px; border-radius: 20px; 
             box-shadow: 0 5px 15px rgba(0,0,0,0.03); border-top: 5px solid #ccc;
+            text-align: center; /* 조 이름 및 명단 중앙 정렬 */
         }
         .team-box.a-border { border-top-color: var(--team-a); }
         .team-box.b-border { border-top-color: var(--team-b); }
         .team-box.c-border { border-top-color: var(--team-c); }
         
-        .team-title { font-size: 0.85rem; font-weight: 800; margin-bottom: 8px; color: #555; }
-        .member-list { font-size: 0.9rem; color: #333; line-height: 1.6; min-height: 50px; }
+        .team-title { font-size: 0.85rem; font-weight: 800; margin-bottom: 8px; }
+        .member-list { 
+            font-size: 0.9rem; color: #333; line-height: 1.8; 
+            min-height: 50px; text-align: center; 
+        }
 
         .ranking-container {
             display: none; width: 100%; max-width: 420px;
@@ -102,7 +106,7 @@
         <h2>📷 어디로 출사를 갈까요?</h2>
         <div class="options">
             <label class="card"><input type="radio" name="location" value="북촌한옥마을"><span>북촌한옥마을</span></label>
-            <label class="card"><input type="radio" name="location" value="남산서울타워"><span>남산타워</span></label>
+            <label class="card"><input type="radio" name="location" value="남산서울타워"><span>남산서울타워</span></label>
             <label class="card"><input type="radio" name="location" value="덕수궁"><span>덕수궁</span></label>
         </div>
         <button onclick="goNext(2)" id="voteBtn" disabled>선택 완료</button>
@@ -157,7 +161,7 @@
 </div>
 
 <script>
-    // Firebase 설정 유지
+    // 1. Firebase 설정 (본인 계정의 정보를 입력해 주세요)
     const firebaseConfig = {
         apiKey: "YOUR_API_KEY",
         authDomain: "hangeul-love-club.firebaseapp.com",
@@ -222,6 +226,8 @@
         box.innerText = state.team;
         document.getElementById('loading-text').style.display = 'none';
         document.getElementById('result-content').style.display = 'block';
+        
+        // 결과창 이름 강조 색상 적용
         document.getElementById('display-team').innerHTML = `<span class="highlight-name">${state.name}</span>님은 ${state.team}!`;
         document.getElementById('ranking-section').style.display = 'block';
     }
@@ -232,7 +238,7 @@
 
         const usersArray = Object.values(data);
         
-        // 1. 간결한 팀별 명단 업데이트
+        // 1. 간결한 팀별 명단 업데이트 (중앙 정렬됨)
         const teams = { 'A조': [], 'B조': [], 'C조': [] };
         usersArray.forEach(u => {
             if(teams[u.team]) teams[u.team].push(u.name);
