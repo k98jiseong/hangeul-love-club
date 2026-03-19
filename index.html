@@ -3,99 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>한사클 출사가기</title>
+    <title>출사 팀 빌딩 - 무작위 버전</title>
     
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 
     <style>
         :root {
-            --primary: #203864;
-            --accent: #e67e22;
-            --bg: #f2f4f7;
-            --white: #ffffff;
-            --success: #27ae60;
+            --primary: #203864; --accent: #e67e22; --bg: #f2f4f7; --white: #ffffff; --success: #27ae60;
         }
 
-        /* 전체 레이아웃 중앙 정렬 */
         body {
             font-family: 'Pretendard', -apple-system, sans-serif;
-            margin: 0; 
-            padding: 40px 20px; 
-            background-color: var(--bg);
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-            min-height: 100vh; 
-            box-sizing: border-box;
+            margin: 0; padding: 40px 20px; background-color: var(--bg);
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            min-height: 100vh; box-sizing: border-box;
         }
 
-        /* 컨테이너 디자인 */
         .container {
-            width: 100%; 
-            max-width: 420px; 
-            background: var(--white);
-            padding: 40px 30px;
-            border-radius: 30px;
+            width: 100%; max-width: 420px; background: var(--white);
+            padding: 40px 30px; border-radius: 30px;
             box-shadow: 0 15px 40px rgba(32, 56, 100, 0.12);
-            text-align: center;
-            margin-bottom: 30px;
-            box-sizing: border-box;
+            text-align: center; margin-bottom: 30px; box-sizing: border-box;
         }
 
         h2 { font-size: 1.4rem; color: var(--primary); margin-top: 0; margin-bottom: 2rem; }
 
-        /* 장소 선택 카드 */
         .options { display: flex; flex-direction: column; gap: 15px; margin-bottom: 2rem; }
         .card {
             padding: 20px; border: 2px solid #edf0f5; border-radius: 18px;
             cursor: pointer; font-weight: 600; font-size: 1rem;
             transition: all 0.2s ease; background: #fff;
         }
-        .card:has(input:checked) {
-            border-color: var(--primary); background: #f0f4f8; color: var(--primary);
-        }
+        .card:has(input:checked) { border-color: var(--primary); background: #f0f4f8; color: var(--primary); }
         
-        /* 숨길 요소들 */
         input[type="radio"] { display: none; }
         .step { display: none; }
         .step.active { display: block; }
 
-        /* ★ 성함 입력창 스타일 (복구 완료) ★ */
         .input-field {
-            display: block; /* 사라졌던 입력창을 다시 표시 */
-            width: 100%; 
-            padding: 18px; 
-            border: 2px solid #edf0f5;
-            border-radius: 16px; 
-            margin-bottom: 1.5rem; 
-            font-size: 1.1rem;
-            box-sizing: border-box; 
-            outline: none; 
-            text-align: center;
-            background-color: #fcfcfc;
-            transition: 0.3s;
+            display: block; width: 100%; padding: 18px; border: 2px solid #edf0f5;
+            border-radius: 16px; margin-bottom: 1.5rem; font-size: 1.1rem;
+            box-sizing: border-box; outline: none; text-align: center;
+            background-color: #fcfcfc; transition: 0.3s;
         }
-        .input-field:focus {
-            border-color: var(--primary);
-            background-color: #fff;
-            box-shadow: 0 0 10px rgba(32, 56, 100, 0.05);
-        }
+        .input-field:focus { border-color: var(--primary); background-color: #fff; }
 
-        /* 버튼 스타일 */
         button {
             width: 100%; padding: 18px; border: none; border-radius: 18px;
             background: var(--primary); color: white; font-weight: 700;
             font-size: 1.1rem; cursor: pointer; box-shadow: 0 8px 20px rgba(32, 56, 100, 0.2);
-            transition: 0.2s;
         }
-        button:active { transform: scale(0.98); }
-        button:disabled { background: #d1d8e0; box-shadow: none; cursor: not-allowed; }
-
         #stop-btn { background: var(--accent); margin-top: 15px; box-shadow: 0 8px 20px rgba(230, 126, 34, 0.3); }
 
-        /* 룰렛 디자인 */
         #roulette-box {
             width: 140px; height: 140px; line-height: 140px; margin: 30px auto;
             border-radius: 50%; background: var(--accent); color: white;
@@ -104,12 +64,10 @@
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         #roulette-box.stop { animation: none; background: var(--success); }
 
-        /* 현황판 디자인 */
         .ranking-container {
             display: none; width: 100%; max-width: 420px;
             background: var(--white); padding: 30px 20px; border-radius: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.05); box-sizing: border-box;
-            margin-bottom: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05); box-sizing: border-box; margin-bottom: 40px;
         }
         
         table { width: 100%; border-collapse: collapse; }
@@ -133,20 +91,19 @@
     </section>
 
     <section id="step2" class="step">
-        <h2>👤 성함을 입력해주세요</h2>
+        <h2>👤 성함을 알려주세요</h2>
         <input type="text" id="userName" class="input-field" placeholder="여기에 성함 입력" maxlength="10">
         <button onclick="assignTeam()">팀 배정 시작하기</button>
     </section>
 
     <section id="step3" class="step">
         <div id="roulette-box">?</div>
-        <p id="loading-text" style="font-weight:600; color:#888;">운명의 팀 추첨 중...</p>
+        <p id="loading-text" style="font-weight:600; color:#888;">팀을 무작위 추첨 중입니다...</p>
         <button id="stop-btn" style="display:none;" onclick="handleStop()">지금 멈추기!</button>
         
         <div id="result-content" style="display:none;">
             <h2 id="display-team" style="margin-bottom: 10px;"></h2>
-            <p style="color:#aaa; font-size:0.9rem; margin-bottom: 20px;">전체 명단이 업데이트되었습니다.</p>
-            <button style="background:#888;" onclick="location.reload()">처음으로</button>
+            <button style="background:#888; margin-top:10px;" onclick="location.reload()">처음으로</button>
         </div>
     </section>
 </div>
@@ -162,7 +119,7 @@
 </div>
 
 <script>
-    // 1. Firebase 설정 (본인 것으로 반드시 유지하세요!)
+    // 1. Firebase 설정 (본인 것으로 유지!)
     const firebaseConfig = {
         apiKey: "YOUR_API_KEY",
         authDomain: "hangeul-love-club.firebaseapp.com",
@@ -199,27 +156,23 @@
             users.forEach(u => { if(counts[u.team] !== undefined) counts[u.team]++; });
 
             const limits = { 'A조': 3, 'B조': 3, 'C조': 2 };
-            const available = Object.keys(limits).filter(t => counts[t] < limits[t]);
+            let available = Object.keys(limits).filter(t => counts[t] < limits[t]);
 
             if(available.length === 0) {
                 alert("정원이 가득 찼습니다!");
                 location.reload();
                 return;
             }
-            state.team = available[Math.floor(Math.random() * available.length)];
-            // ... 기존 코드 중 available 변수 정의 바로 아래부터 교체 ...
 
-// 1. 후보 팀들을 무작위로 한 번 더 뒤섞습니다 (Fisher-Yates Shuffle)
-for (let i = available.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [available[i], available[j]] = [available[j], available[i]];
-}
+            // ★ 진짜 랜덤 로직: 배열 셔플 (Fisher-Yates)
+            for (let i = available.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [available[i], available[j]] = [available[j], available[i]];
+            }
+            state.team = available[0];
 
-// 2. 뒤섞인 후보군 중 첫 번째 팀을 선택합니다.
-state.team = available[0];
-
-// 3. 멈춤 버튼 표시
-document.getElementById('stop-btn').style.display = 'block';
+            document.getElementById('stop-btn').style.display = 'block';
+        } catch(e) { alert("데이터 연결 중 오류 발생"); }
     }
 
     async function handleStop() {
