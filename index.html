@@ -14,6 +14,7 @@
             --primary: #203864; /* 메인 네이비 */
             --accent: #e67e22; /* 포인트 오렌지 */
             --bg: #f8f9fa;
+            --success: #27ae60;
         }
 
         body {
@@ -35,18 +36,15 @@
 
         h2 { color: var(--primary); margin-bottom: 1.5rem; font-size: 1.4rem; }
 
-        /* 장소 선택 카드 스타일 */
         .options { display: flex; flex-direction: column; gap: 12px; margin-bottom: 1.5rem; }
         .card {
             padding: 16px; border: 2px solid #eee; border-radius: 12px;
             cursor: pointer; transition: all 0.2s; font-weight: 500;
         }
         .card:hover { background: #f0f4f8; }
-        input[type="radio"]:checked + span { color: var(--primary); font-weight: bold; }
         .card:has(input:checked) { border-color: var(--primary); background: #f0f4f8; }
         input[type="radio"] { display: none; }
 
-        /* 입력창 & 버튼 */
         input[type="text"] {
             width: 100%; padding: 14px; border: 1px solid #ddd;
             border-radius: 10px; margin-bottom: 1rem; box-sizing: border-box;
@@ -60,7 +58,9 @@
         button:disabled { background: #ccc; cursor: not-allowed; }
         button:active { transform: scale(0.98); }
 
-        /* 룰렛 스타일 */
+        /* 멈춤 버튼 전용 스타일 */
+        #stop-btn { background: var(--accent); margin-top: 10px; }
+
         #roulette-box {
             width: 140px; height: 140px; line-height: 140px;
             margin: 30px auto; border-radius: 50%;
@@ -69,7 +69,7 @@
             animation: spin 0.15s infinite linear;
         }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        #roulette-box.stop { animation: none; background: #27ae60; box-shadow: 0 0 20px rgba(39, 174, 96, 0.4); }
+        #roulette-box.stop { animation: none; background: var(--success); box-shadow: 0 0 20px rgba(39, 174, 96, 0.4); }
 
         #kakao-btn { background: #FEE500; color: #191919; margin-top: 10px; }
     </style>
@@ -97,6 +97,8 @@
         <div id="roulette-box">?</div>
         <p id="loading-text">운명의 팀을 고르는 중...</p>
         
+        <button id="stop-btn" style="display:none;" onclick="handleStop()">지금 멈추기!</button>
+
         <div id="result-content" style="display:none;">
             <h2 id="display-team"></h2>
             <p id="display-loc" style="color:#666; margin-bottom:20px;"></p>
@@ -138,22 +140,21 @@
         document.getElementById(`step${num}`).classList.add('active');
     }
 
-    // 팀 배정 로직 (3/3/2 정원제)
+    // 팀 배정 로직 시작
     async function assignTeam() {
         state.name = document.getElementById('userName').value.trim();
         if(!state.name) return alert("이름을 입력해 주세요!");
 
         goNext(3);
-
+        
+        // 데이터 불러오기 및 배정 가능 팀 확인
         try {
             const snapshot = await db.ref('users').once('value');
             const users = snapshot.val() ? Object.values(snapshot.val()) : [];
             
-            // 현재 각 팀 인원 계산
             const counts = { 'A조': 0, 'B조': 0, 'C조': 0 };
             users.forEach(u => { if(counts[u.team] !== undefined) counts[u.team]++; });
 
-            // 정원 제한: A(3), B(3), C(2)
             const limits = { 'A조': 3, 'B조': 3, 'C조': 2 };
             const available = Object.keys(limits).filter(t => counts[t] < limits[t]);
 
@@ -163,24 +164,35 @@
                 return;
             }
 
-            // 랜덤 배정
+            // 결과값 선배정 (표시는 멈춤 버튼 누를 때)
             state.team = available[Math.floor(Math.random() * available.length)];
-
-            // 연출 후 저장
-            setTimeout(async () => {
-                await db.ref('users').push({
-                    name: state.name,
-                    location: state.location,
-                    team: state.team,
-                    date: new Date().toISOString()
-                });
-
-                showFinalResult();
-            }, 2000);
+            
+            // 멈춤 버튼 표시
+            document.getElementById('stop-btn').style.display = 'block';
 
         } catch(e) {
             alert("데이터 연결 오류가 발생했습니다.");
             console.error(e);
+        }
+    }
+
+    // 멈춤 버튼 클릭 시 처리
+    async function handleStop() {
+        document.getElementById('stop-btn').style.display = 'none';
+        
+        try {
+            // DB 저장
+            await db.ref('users').push({
+                name: state.name,
+                location: state.location,
+                team: state.team,
+                date: new Date().toISOString()
+            });
+
+            // 결과 연출
+            showFinalResult();
+        } catch(e) {
+            alert("저장 중 오류가 발생했습니다.");
         }
     }
 
