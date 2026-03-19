@@ -2,286 +2,212 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>한글사랑클럽 월별 단어 뽑기</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>출사 팀 빌딩 시스템</title>
     
-    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+    <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.0/kakao.min.js"></script>
 
     <style>
         :root {
-            --color-primary: #0455BF;
-            --color-bg: #CEE8F2;
-            --color-machine-body: #2c3e50;
-            --color-lever: #feca57;
+            --primary: #203864; /* 메인 네이비 */
+            --accent: #e67e22; /* 포인트 오렌지 */
+            --bg: #f8f9fa;
         }
 
         body {
-            font-family: 'Pretendard', sans-serif;
-            background-color: var(--color-bg);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 20px;
+            font-family: 'Pretendard', -apple-system, sans-serif;
+            margin: 0; background: var(--bg);
+            display: flex; justify-content: center; align-items: center; min-height: 100vh;
         }
 
         .container {
-            background: white;
-            padding: 35px 25px;
-            border-radius: 30px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
-            width: 100%;
-            max-width: 380px;
-            text-align: center;
+            width: 90%; max-width: 450px; background: white;
+            padding: 2rem; border-radius: 24px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1); text-align: center;
         }
 
-        /* --- 3D 가챠 기계 디자인 --- */
-        .gacha-area {
-            position: relative;
-            padding: 20px 0;
-            perspective: 1000px;
+        .step { display: none; }
+        .step.active { display: block; animation: fadeIn 0.5s; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        h2 { color: var(--primary); margin-bottom: 1.5rem; font-size: 1.4rem; }
+
+        /* 장소 선택 카드 스타일 */
+        .options { display: flex; flex-direction: column; gap: 12px; margin-bottom: 1.5rem; }
+        .card {
+            padding: 16px; border: 2px solid #eee; border-radius: 12px;
+            cursor: pointer; transition: all 0.2s; font-weight: 500;
+        }
+        .card:hover { background: #f0f4f8; }
+        input[type="radio"]:checked + span { color: var(--primary); font-weight: bold; }
+        .card:has(input:checked) { border-color: var(--primary); background: #f0f4f8; }
+        input[type="radio"] { display: none; }
+
+        /* 입력창 & 버튼 */
+        input[type="text"] {
+            width: 100%; padding: 14px; border: 1px solid #ddd;
+            border-radius: 10px; margin-bottom: 1rem; box-sizing: border-box;
         }
 
-        /* 유리 돔 */
-        .machine-dome {
-            width: 200px;
-            height: 200px;
-            margin: 0 auto;
-            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.2) 50%, rgba(200,230,255,0.4) 100%);
-            border-radius: 50%;
-            border: 4px solid #fff;
-            position: relative;
-            z-index: 2;
-            overflow: hidden;
-            box-shadow: inset -10px -10px 20px rgba(0,0,0,0.1), 0 10px 20px rgba(0,0,0,0.1);
-        }
-
-        /* 5가지 색상의 화려한 캡슐 */
-        .capsule {
-            position: absolute;
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            box-shadow: inset -3px -3px 6px rgba(0,0,0,0.2), 2px 3px 5px rgba(0,0,0,0.1);
-        }
-        .cp-red { background: linear-gradient(135deg, #ff6b6b 50%, #fff 50%); top: 130px; left: 40px; transform: rotate(20deg); }
-        .cp-blue { background: linear-gradient(135deg, #4da6ff 50%, #fff 50%); top: 145px; left: 90px; transform: rotate(-15deg); }
-        .cp-yellow { background: linear-gradient(135deg, #feca57 50%, #fff 50%); top: 120px; left: 130px; transform: rotate(45deg); }
-        .cp-green { background: linear-gradient(135deg, #1dd1a1 50%, #fff 50%); top: 90px; left: 60px; transform: rotate(-30deg); }
-        .cp-purple { background: linear-gradient(135deg, #a29bfe 50%, #fff 50%); top: 150px; left: 65px; transform: rotate(100deg); }
-
-        /* 기계 하단부 (3D 금속 질감) */
-        .machine-body {
-            width: 210px;
-            height: 160px;
-            background: linear-gradient(145deg, #34495e, #1a252f);
-            margin: -45px auto 0;
-            border-radius: 20px 20px 40px 40px;
-            position: relative;
-            z-index: 1;
-            box-shadow: 0 10px 0 #111, 0 15px 25px rgba(0,0,0,0.3);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        /* 노란색 회전 레버 */
-        .lever {
-            width: 85px;
-            height: 85px;
-            background: radial-gradient(circle at 30% 30%, #feca57, #f39c12);
-            border: 5px solid #fff;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-weight: 900;
-            color: white;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
-            box-shadow: 0 6px 0 #d35400, 0 8px 15px rgba(0,0,0,0.3);
-            transition: 0.1s;
-            z-index: 3;
-            user-select: none;
-        }
-
-        .lever:active {
-            transform: translateY(4px) rotate(20deg);
-            box-shadow: 0 2px 0 #d35400;
-        }
-
-        /* 결과 표시창 */
-        #result-bar {
-            width: 220px;
-            height: 48px;
-            background: #000;
-            border-radius: 12px;
-            margin: 25px auto;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: #00d2ff;
-            font-weight: bold;
-            font-size: 1.1rem;
-            border: 2px solid #333;
-            box-shadow: inset 0 0 10px rgba(0,210,255,0.2);
-        }
-
-        /* --- 자연스러운 애니메이션 --- */
-        .spinning .capsule {
-            animation: jump 0.5s infinite ease-in-out;
-        }
-        .spinning .cp-red { animation-delay: 0.1s; }
-        .spinning .cp-blue { animation-delay: 0.2s; }
-        .spinning .cp-yellow { animation-delay: 0s; }
-        .spinning .cp-green { animation-delay: 0.3s; }
-        .spinning .cp-purple { animation-delay: 0.15s; }
-
-        @keyframes jump {
-            0%, 100% { transform: translate(0, 0) rotate(0deg); }
-            50% { transform: translate(var(--x, 15px), var(--y, -80px)) rotate(180deg); }
-        }
-
-        /* 기계 전체 반동 */
-        .recoil { animation: recoil 0.1s infinite; }
-        @keyframes recoil {
-            0% { transform: translateY(0); }
-            50% { transform: translateY(2px); }
-        }
-
-        /* 버튼 및 기타 UI */
         button {
-            background: var(--color-primary);
-            color: white;
-            border: none;
-            padding: 16px;
-            border-radius: 14px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            cursor: pointer;
-            width: 100%;
-            transition: 0.2s;
+            width: 100%; padding: 16px; border: none; border-radius: 12px;
+            background: var(--primary); color: white; font-weight: bold;
+            font-size: 1rem; cursor: pointer; transition: 0.3s;
         }
+        button:disabled { background: #ccc; cursor: not-allowed; }
         button:active { transform: scale(0.98); }
-        .btn-select { background: #1dd1a1; margin-top: 10px; }
-        input {
-            width: 100%; padding: 14px; border-radius: 12px; border: 2px solid #ddd;
-            margin-bottom: 20px; box-sizing: border-box; font-size: 1rem;
+
+        /* 룰렛 스타일 */
+        #roulette-box {
+            width: 140px; height: 140px; line-height: 140px;
+            margin: 30px auto; border-radius: 50%;
+            background: var(--accent); color: white; font-size: 2.2rem; font-weight: 800;
+            box-shadow: 0 0 20px rgba(230, 126, 34, 0.4);
+            animation: spin 0.15s infinite linear;
         }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        #roulette-box.stop { animation: none; background: #27ae60; box-shadow: 0 0 20px rgba(39, 174, 96, 0.4); }
+
+        #kakao-btn { background: #FEE500; color: #191919; margin-top: 10px; }
     </style>
 </head>
 <body>
 
-    <div id="intro-screen" class="container">
-        <h2 style="color:var(--color-primary)">한글사랑클럽</h2>
-        <p>환영합니다!<br>이름을 입력하고 입장하세요.</p>
-        <input type="text" id="username" placeholder="이름 입력">
-        <button onclick="enter()">입장하기</button>
-    </div>
-
-    <div id="main-screen" class="container" style="display:none">
-        <h4 id="welcome-msg" style="margin:0; color:#555"></h4>
-        
-        <div class="gacha-area" id="gacha-area">
-            <div class="machine-dome" id="dome">
-                <div class="capsule cp-red" style="--x:-20px; --y:-70px"></div>
-                <div class="capsule cp-blue" style="--x:30px; --y:-90px"></div>
-                <div class="capsule cp-yellow" style="--x:-40px; --y:-60px"></div>
-                <div class="capsule cp-green" style="--x:10px; --y:-80px"></div>
-                <div class="capsule cp-purple" style="--x:25px; --y:-100px"></div>
-            </div>
-            <div class="machine-body">
-                <div class="lever" onclick="draw()">PUSH</div>
-            </div>
+<div class="container">
+    <section id="step1" class="step active">
+        <h2>어디로 출사를 갈까요?</h2>
+        <div class="options">
+            <label class="card"><input type="radio" name="location" value="북촌한옥마을"><span>북촌한옥마을</span></label>
+            <label class="card"><input type="radio" name="location" value="남산서울타워"><span>남산서울타워</span></label>
+            <label class="card"><input type="radio" name="location" value="덕수궁"><span>덕수궁</span></label>
         </div>
+        <button onclick="goNext(2)" id="voteBtn" disabled>투표 완료</button>
+    </section>
 
-        <div id="result-bar">?</div>
-        <button id="select-btn" class="btn-select" onclick="confirmWord()" style="display:none">이 단어로 결정!</button>
-        <p style="font-size:0.8rem; color:#888; margin-top:15px">남은 단어: <span id="count">0</span> / 20</p>
-    </div>
+    <section id="step2" class="step">
+        <h2>성함을 입력해 주세요</h2>
+        <input type="text" id="userName" placeholder="홍길동" maxlength="10">
+        <button onclick="assignTeam()">팀 배정 시작 (다시하기 불가)</button>
+    </section>
 
-    <div id="success-screen" class="container" style="display:none">
-        <h1 style="font-size:3.5rem">🎁</h1>
-        <h2 id="final-user"></h2>
-        <p>선택하신 단어는</p>
-        <h3 id="final-word" style="color:var(--color-primary); font-size:1.8rem"></h3>
-        <p>확정되었습니다!</p>
-    </div>
+    <section id="step3" class="step">
+        <div id="roulette-box">?</div>
+        <p id="loading-text">운명의 팀을 고르는 중...</p>
+        
+        <div id="result-content" style="display:none;">
+            <h2 id="display-team"></h2>
+            <p id="display-loc" style="color:#666; margin-bottom:20px;"></p>
+            <button id="kakao-btn" onclick="sendKakao()">카카오톡으로 공유하기</button>
+        </div>
+    </section>
+</div>
 
-    <script>
-        // Firebase 설정 (기존 정보 유지)
-        const firebaseConfig = {
-            apiKey: "AIzaSyB0fYqqVIcSnZI34Qk5AldPAKCiwK7fb60",
-            authDomain: "hangeul-love-club.firebaseapp.com",
-            projectId: "hangeul-love-club",
-            storageBucket: "hangeul-love-club.firebasestorage.app",
-            messagingSenderId: "983798363707",
-            appId: "1:983798363707:web:0c9710c2ac5f4b82ec0e1e",
-            measurementId: "G-RCPVETCQB0",
-            databaseURL: "https://hangeul-love-club-default-rtdb.firebaseio.com"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+<script>
+    // 1. 설정 정보 (본인의 것으로 변경 필수)
+    const firebaseConfig = {
+        apiKey: "YOUR_API_KEY",
+        authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+        databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
+        projectId: "YOUR_PROJECT_ID",
+        appId: "YOUR_APP_ID"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    
+    if (!Kakao.isInitialized()) Kakao.init('YOUR_KAKAO_JS_KEY');
 
-        let words = [];
-        let current = "";
-        let user = "";
-        let rolling = false;
+    let state = {
+        name: "",
+        location: "",
+        team: ""
+    };
 
-        db.ref('words').on('value', snap => {
-            words = snap.val() || [];
-            document.getElementById('count').innerText = words.length;
+    // 장소 선택 체크
+    document.querySelectorAll('input[name="location"]').forEach(el => {
+        el.addEventListener('change', (e) => {
+            state.location = e.target.value;
+            document.getElementById('voteBtn').disabled = false;
         });
+    });
 
-        function enter() {
-            user = document.getElementById('username').value.trim();
-            if(!user) return alert("이름을 입력하세요!");
-            document.getElementById('intro-screen').style.display = 'none';
-            document.getElementById('main-screen').style.display = 'block';
-            document.getElementById('welcome-msg').innerText = `${user}님 행운을 빌어요!`;
-        }
+    function goNext(num) {
+        document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+        document.getElementById(`step${num}`).classList.add('active');
+    }
 
-        function draw() {
-            if(rolling || words.length === 0) return;
-            rolling = true;
+    // 팀 배정 로직 (3/3/2 정원제)
+    async function assignTeam() {
+        state.name = document.getElementById('userName').value.trim();
+        if(!state.name) return alert("이름을 입력해 주세요!");
+
+        goNext(3);
+
+        try {
+            const snapshot = await db.ref('users').once('value');
+            const users = snapshot.val() ? Object.values(snapshot.val()) : [];
             
-            const dome = document.getElementById('dome');
-            const area = document.getElementById('gacha-area');
-            const result = document.getElementById('result-bar');
-            
-            dome.classList.add('spinning');
-            area.classList.add('recoil');
-            document.getElementById('select-btn').style.display = 'none';
+            // 현재 각 팀 인원 계산
+            const counts = { 'A조': 0, 'B조': 0, 'C조': 0 };
+            users.forEach(u => { if(counts[u.team] !== undefined) counts[u.team]++; });
 
-            let cnt = 0;
-            let timer = setInterval(() => {
-                result.innerText = words[Math.floor(Math.random()*words.length)];
-                cnt++;
-                if(cnt > 20) {
-                    clearInterval(timer);
-                    dome.classList.remove('spinning');
-                    area.classList.remove('recoil');
-                    current = words[Math.floor(Math.random()*words.length)];
-                    result.innerText = current;
-                    document.getElementById('select-btn').style.display = 'block';
-                    rolling = false;
-                }
-            }, 80);
-        }
+            // 정원 제한: A(3), B(3), C(2)
+            const limits = { 'A조': 3, 'B조': 3, 'C조': 2 };
+            const available = Object.keys(limits).filter(t => counts[t] < limits[t]);
 
-        function confirmWord() {
-            if(!confirm(`'${current}'를 선택하시겠습니까?`)) return;
-            const updated = words.filter(w => w !== current);
-            db.ref('words').set(updated).then(() => {
-                db.ref('selections').push({ user, word: current, time: Date.now() });
-                document.getElementById('main-screen').style.display = 'none';
-                document.getElementById('success-screen').style.display = 'block';
-                document.getElementById('final-user').innerText = `${user}님!`;
-                document.getElementById('final-word').innerText = current;
-            });
+            if(available.length === 0) {
+                alert("8명 정원이 모두 찼습니다!");
+                location.reload();
+                return;
+            }
+
+            // 랜덤 배정
+            state.team = available[Math.floor(Math.random() * available.length)];
+
+            // 연출 후 저장
+            setTimeout(async () => {
+                await db.ref('users').push({
+                    name: state.name,
+                    location: state.location,
+                    team: state.team,
+                    date: new Date().toISOString()
+                });
+
+                showFinalResult();
+            }, 2000);
+
+        } catch(e) {
+            alert("데이터 연결 오류가 발생했습니다.");
+            console.error(e);
         }
-    </script>
+    }
+
+    function showFinalResult() {
+        const box = document.getElementById('roulette-box');
+        box.classList.add('stop');
+        box.innerText = state.team;
+        
+        document.getElementById('loading-text').style.display = 'none';
+        document.getElementById('result-content').style.display = 'block';
+        document.getElementById('display-team').innerText = `${state.name}님은 [${state.team}] 입니다!`;
+        document.getElementById('display-loc').innerText = `장소: ${state.location}`;
+    }
+
+    function sendKakao() {
+        Kakao.Share.sendDefault({
+            objectType: 'feed',
+            content: {
+                title: '📷 출사 팀 배정 결과',
+                description: `${state.name}님: ${state.location} (${state.team})`,
+                imageUrl: 'https://cdn-icons-png.flaticon.com/512/1042/1042339.png',
+                link: { mobileWebUrl: window.location.href, webUrl: window.location.href },
+            },
+            buttons: [{ title: '결과 확인하기', link: { mobileWebUrl: window.location.href, webUrl: window.location.href } }]
+        });
+    }
+</script>
+
 </body>
 </html>
