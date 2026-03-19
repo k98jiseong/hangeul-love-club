@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>출사 팀 빌딩 시스템</title>
+    <title>한사클 출사가기</title>
     
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
@@ -90,7 +90,7 @@
     <section id="step2" class="step">
         <h2>성함을 입력해 주세요</h2>
         <input type="text" id="userName" placeholder="홍길동" maxlength="10">
-        <button onclick="assignTeam()">팀 배정 시작 (다시하기 불가)</button>
+        <button onclick="assignTeam()">팀 배정 시작</button>
     </section>
 
     <section id="step3" class="step">
@@ -110,11 +110,14 @@
 <script>
     // 1. 설정 정보 (본인의 것으로 변경 필수)
     const firebaseConfig = {
-        apiKey: "YOUR_API_KEY",
-        authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-        databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
-        projectId: "YOUR_PROJECT_ID",
-        appId: "YOUR_APP_ID"
+         apiKey: "AIzaSyB0fYqqVIcSnZI34Qk5AldPAKCiwK7fb60",
+  authDomain: "hangeul-love-club.firebaseapp.com",
+  databaseURL: "https://hangeul-love-club-default-rtdb.firebaseio.com",
+  projectId: "hangeul-love-club",
+  storageBucket: "hangeul-love-club.firebasestorage.app",
+  messagingSenderId: "983798363707",
+  appId: "1:983798363707:web:0c9710c2ac5f4b82ec0e1e",
+  measurementId: "G-RCPVETCQB0"
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
