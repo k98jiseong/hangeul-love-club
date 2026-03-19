@@ -28,13 +28,16 @@
 
         h2 { color: var(--primary); margin-bottom: 1.5rem; }
         .options { display: flex; flex-direction: column; gap: 12px; margin-bottom: 1.5rem; }
-        .card { padding: 16px; border: 2px solid #eee; border-radius: 12px; cursor: pointer; font-weight: 500; }
-        .card:has(input:checked) { border-color: var(--primary); background: #f0f4f8; }
+        .card { padding: 16px; border: 2px solid #eee; border-radius: 12px; cursor: pointer; font-weight: 500; transition: 0.2s; }
+        .card:hover { background: #f8f9fa; }
+        .card:has(input:checked) { border-color: var(--primary); background: #f0f4f8; font-weight: bold; }
         input[type="radio"], input[type="text"] { width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 10px; margin-bottom: 1rem; box-sizing: border-box; }
         input[type="radio"] { display: none; }
 
-        button { width: 100%; padding: 16px; border: none; border-radius: 12px; background: var(--primary); color: white; font-weight: bold; cursor: pointer; }
+        button { width: 100%; padding: 16px; border: none; border-radius: 12px; background: var(--primary); color: white; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        button:disabled { background: #ccc; }
         #stop-btn { background: var(--accent); margin-top: 10px; }
+        .retry-btn { background: #666; margin-top: 20px; font-size: 0.9rem; padding: 12px; }
 
         /* 룰렛 스타일 */
         #roulette-box {
@@ -43,16 +46,18 @@
             animation: spin 0.15s infinite linear;
         }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        #roulette-box.stop { animation: none; background: var(--success); }
+        #roulette-box.stop { animation: none; background: var(--success); box-shadow: 0 0 15px rgba(39, 174, 96, 0.4); }
 
-        /* 랭킹판(현황판) 스타일 */
+        /* 랭킹판(현황판) 스타일 - 처음엔 숨김 */
         .ranking-container {
-            width: 100%; max-width: 450px; background: white; padding: 1.5rem; border-radius: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            display: none; /* 핵심 수정: 초기 숨김 */
+            width: 100%; max-width: 450px; background: white; padding: 1.5rem; border-radius: 20px; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05); animation: fadeIn 0.8s;
         }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { padding: 12px; border-bottom: 1px solid #eee; text-align: center; font-size: 0.9rem; }
+        th, td { padding: 12px; border-bottom: 1px solid #eee; text-align: center; font-size: 0.85rem; }
         th { background: #f4f7f9; color: var(--primary); }
-        .team-tag { padding: 4px 8px; border-radius: 6px; font-weight: bold; font-size: 0.8rem; color: white; }
+        .team-tag { padding: 4px 8px; border-radius: 6px; font-weight: bold; font-size: 0.75rem; color: white; }
         .A { background: #3498db; } .B { background: #9b59b6; } .C { background: #e74c3c; }
     </style>
 </head>
@@ -71,7 +76,7 @@
 
     <section id="step2" class="step">
         <h2>성함을 입력해 주세요</h2>
-        <input type="text" id="userName" placeholder="이름 입력" maxlength="10">
+        <input type="text" id="userName" placeholder="이름을 입력하세요" maxlength="10">
         <button onclick="assignTeam()">팀 배정 시작</button>
     </section>
 
@@ -79,27 +84,28 @@
         <div id="roulette-box">?</div>
         <p id="loading-text">운명의 팀을 고르는 중...</p>
         <button id="stop-btn" style="display:none;" onclick="handleStop()">지금 멈추기!</button>
+        
         <div id="result-content" style="display:none;">
             <h2 id="display-team"></h2>
-            <button onclick="location.reload()">새로고침</button>
+            <p style="color:#666; font-size:0.9rem;">아래에서 전체 배정 현황을 확인하세요!</p>
+            <button class="retry-btn" onclick="location.reload()">처음으로 돌아가기</button>
         </div>
     </section>
 </div>
 
-<div class="ranking-container">
-    <h3 style="margin-top:0; color:var(--primary);">📊 실시간 팀 배정 현황</h3>
+<div id="ranking-section" class="ranking-container">
+    <h3 style="margin-top:0; color:var(--primary); text-align:center;">📊 전체 팀 배정 현황</h3>
     <table>
         <thead>
             <tr><th>이름</th><th>장소</th><th>확정 팀</th></tr>
         </thead>
         <tbody id="ranking-body">
-            <tr><td colspan="3">데이터를 불러오는 중...</td></tr>
-        </tbody>
+            </tbody>
     </table>
 </div>
 
 <script>
-    // 1. 본인의 Firebase 설정값을 여기에 정확히 넣으세요!
+    // 1. Firebase 설정 (본인 것으로 유지)
     const firebaseConfig = {
         apiKey: "YOUR_API_KEY",
         authDomain: "hangeul-love-club.firebaseapp.com",
@@ -112,7 +118,6 @@
 
     let state = { name: "", location: "", team: "" };
 
-    // 장소 선택 이벤트
     document.querySelectorAll('input[name="location"]').forEach(el => {
         el.addEventListener('change', (e) => {
             state.location = e.target.value;
@@ -125,60 +130,66 @@
         document.getElementById(`step${num}`).classList.add('active');
     }
 
-    // 팀 배정 시작
     async function assignTeam() {
         state.name = document.getElementById('userName').value.trim();
         if(!state.name) return alert("이름을 입력하세요!");
         goNext(3);
         
-        const snapshot = await db.ref('users').once('value');
-        const users = snapshot.val() ? Object.values(snapshot.val()) : [];
-        const counts = { 'A조': 0, 'B조': 0, 'C조': 0 };
-        users.forEach(u => { if(counts[u.team] !== undefined) counts[u.team]++; });
+        try {
+            const snapshot = await db.ref('users').once('value');
+            const users = snapshot.val() ? Object.values(snapshot.val()) : [];
+            const counts = { 'A조': 0, 'B조': 0, 'C조': 0 };
+            users.forEach(u => { if(counts[u.team] !== undefined) counts[u.team]++; });
 
-        const limits = { 'A조': 3, 'B조': 3, 'C조': 2 };
-        const available = Object.keys(limits).filter(t => counts[t] < limits[t]);
+            const limits = { 'A조': 3, 'B조': 3, 'C조': 2 };
+            const available = Object.keys(limits).filter(t => counts[t] < limits[t]);
 
-        if(available.length === 0) return alert("정원이 찼습니다!");
-        state.team = available[Math.floor(Math.random() * available.length)];
-        document.getElementById('stop-btn').style.display = 'block';
+            if(available.length === 0) {
+                alert("죄송합니다. 모든 팀의 정원이 찼습니다!");
+                location.reload();
+                return;
+            }
+            state.team = available[Math.floor(Math.random() * available.length)];
+            document.getElementById('stop-btn').style.display = 'block';
+        } catch(e) { alert("연결 오류가 발생했습니다."); }
     }
 
-    // 멈춤 및 저장
     async function handleStop() {
         document.getElementById('stop-btn').style.display = 'none';
+        
+        // 데이터 저장
         await db.ref('users').push({
             name: state.name, location: state.location, team: state.team, date: new Date().toISOString()
         });
         
+        // 결과 UI 연출
         const box = document.getElementById('roulette-box');
-        box.classList.add('stop'); box.innerText = state.team;
+        box.classList.add('stop'); 
+        box.innerText = state.team;
         document.getElementById('loading-text').style.display = 'none';
         document.getElementById('result-content').style.display = 'block';
-        document.getElementById('display-team').innerText = `${state.name}님은 ${state.team}입니다!`;
+        document.getElementById('display-team').innerText = `${state.name}님은 [${state.team}]입니다!`;
+
+        // 핵심: 결과표 나타내기
+        document.getElementById('ranking-section').style.display = 'block';
     }
 
-    // 실시간 현황 업데이트 (랭킹판)
+    // 랭킹판 데이터 실시간 수신
     db.ref('users').on('value', (snapshot) => {
         const data = snapshot.val();
         const tbody = document.getElementById('ranking-body');
-        tbody.innerHTML = "";
-
-        if(!data) {
-            tbody.innerHTML = "<tr><td colspan='3'>아직 참여자가 없습니다.</td></tr>";
-            return;
-        }
+        if(!data) return;
 
         const sorted = Object.values(data).sort((a, b) => new Date(b.date) - new Date(a.date));
-        sorted.forEach(user => {
+        tbody.innerHTML = sorted.map(user => {
             const teamClass = user.team === 'A조' ? 'A' : (user.team === 'B조' ? 'B' : 'C');
-            tbody.innerHTML += `
+            return `
                 <tr>
                     <td>${user.name}</td>
                     <td>${user.location}</td>
                     <td><span class="team-tag ${teamClass}">${user.team}</span></td>
                 </tr>`;
-        });
+        }).join('');
     });
 </script>
 </body>
