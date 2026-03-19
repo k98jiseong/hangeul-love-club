@@ -222,6 +222,10 @@
             buttons: [{ title: '결과 확인하기', link: { mobileWebUrl: window.location.href, webUrl: window.location.href } }]
         });
     }
+
+    if (!Kakao.isInitialized()) {
+    Kakao.init('7bd11fca5b426f40a04dd573a8c5d797');
+}
 </script>
 
 </body>
