@@ -9,112 +9,99 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 
     <style>
-        /* 모바일 최적화 스타일 변수 */
         :root {
             --primary: #203864;
             --accent: #e67e22;
             --bg: #f2f4f7;
             --white: #ffffff;
             --success: #27ae60;
-            --text-main: #333;
         }
 
+        /* 1. PC/모바일 통합 중앙 정렬 레이아웃 */
         body {
-            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
-            margin: 0; padding: 20px 15px; /* 모바일 좌우 여백 */
+            font-family: 'Pretendard', -apple-system, sans-serif;
+            margin: 0; 
+            padding: 40px 20px; /* 상하좌우 마진 확보 */
             background-color: var(--bg);
-            color: var(--text-main);
-            display: flex; flex-direction: column; align-items: center;
-            min-height: 100vh; box-sizing: border-box;
-        }
-
-        /* 메인 컨테이너 */
-        .container {
-            width: 100%; max-width: 400px; /* 모바일 한 손 너비 */
-            background: var(--white);
-            padding: 30px 24px;
-            border-radius: 28px;
-            box-shadow: 0 10px 30px rgba(32, 56, 100, 0.08);
-            text-align: center;
-            margin-bottom: 20px;
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; /* PC에서 세로 중앙 정렬 */
+            min-height: 100vh; 
             box-sizing: border-box;
         }
 
-        h2 { font-size: 1.35rem; color: var(--primary); margin-bottom: 1.8rem; letter-spacing: -0.5px; }
-
-        /* 선택 카드 스타일링 */
-        .options { display: flex; flex-direction: column; gap: 14px; margin-bottom: 1.8rem; }
-        .card {
-            padding: 18px; border: 2px solid #edf0f5; border-radius: 16px;
-            cursor: pointer; font-weight: 600; font-size: 1rem;
-            transition: all 0.25s ease; background: #fff;
-            display: flex; align-items: center; justify-content: center;
+        /* 2. 컨테이너 디자인 개선 */
+        .container {
+            width: 100%; 
+            max-width: 420px; 
+            background: var(--white);
+            padding: 40px 30px;
+            border-radius: 30px;
+            box-shadow: 0 15px 40px rgba(32, 56, 100, 0.12);
+            text-align: center;
+            margin-bottom: 30px; /* 아래 현황판과의 간격 */
+            box-sizing: border-box;
         }
-        .card:active { transform: scale(0.97); } /* 터치 피드백 */
+
+        h2 { font-size: 1.4rem; color: var(--primary); margin-top: 0; margin-bottom: 2rem; }
+
+        .options { display: flex; flex-direction: column; gap: 15px; margin-bottom: 2rem; }
+        .card {
+            padding: 20px; border: 2px solid #edf0f5; border-radius: 18px;
+            cursor: pointer; font-weight: 600; font-size: 1rem;
+            transition: all 0.2s ease; background: #fff;
+        }
         .card:has(input:checked) {
             border-color: var(--primary); background: #f0f4f8; color: var(--primary);
-            box-shadow: 0 4px 12px rgba(32, 56, 100, 0.1);
         }
         input[type="radio"], input[type="text"] { display: none; }
 
-        /* 입력창 디자인 */
         .input-field {
-            width: 100%; padding: 16px; border: 2px solid #edf0f5;
-            border-radius: 14px; margin-bottom: 1.2rem; font-size: 1rem;
-            box-sizing: border-box; outline: none; transition: 0.2s;
-            text-align: center; display: block;
+            width: 100%; padding: 18px; border: 2px solid #edf0f5;
+            border-radius: 16px; margin-bottom: 1.5rem; font-size: 1.1rem;
+            box-sizing: border-box; outline: none; text-align: center; display: block;
         }
-        .input-field:focus { border-color: var(--primary); background: #fff; }
 
-        /* 버튼 공통 스타일 */
         button {
-            width: 100%; padding: 18px; border: none; border-radius: 16px;
+            width: 100%; padding: 18px; border: none; border-radius: 18px;
             background: var(--primary); color: white; font-weight: 700;
-            font-size: 1.05rem; cursor: pointer; transition: 0.3s;
-            box-shadow: 0 6px 15px rgba(32, 56, 100, 0.2);
+            font-size: 1.1rem; cursor: pointer; box-shadow: 0 8px 20px rgba(32, 56, 100, 0.2);
         }
-        button:disabled { background: #d1d8e0; box-shadow: none; cursor: not-allowed; }
-        #stop-btn { background: var(--accent); margin-top: 10px; box-shadow: 0 6px 15px rgba(230, 126, 34, 0.3); }
-        .retry-btn { background: #7f8c8d; margin-top: 25px; padding: 14px; font-size: 0.9rem; }
+        #stop-btn { background: var(--accent); margin-top: 15px; box-shadow: 0 8px 20px rgba(230, 126, 34, 0.3); }
 
-        /* 룰렛 애니메이션 */
+        /* 룰렛 디자인 */
         #roulette-box {
-            width: 130px; height: 130px; line-height: 130px; margin: 30px auto;
+            width: 140px; height: 140px; line-height: 140px; margin: 30px auto;
             border-radius: 50%; background: var(--accent); color: white;
-            font-size: 2.2rem; font-weight: 800;
-            animation: spin 0.12s infinite linear;
-            box-shadow: 0 0 25px rgba(230, 126, 34, 0.4);
+            font-size: 2.5rem; font-weight: 800; animation: spin 0.12s infinite linear;
         }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        #roulette-box.stop { animation: none; background: var(--success); box-shadow: 0 0 25px rgba(39, 174, 96, 0.4); }
+        #roulette-box.stop { animation: none; background: var(--success); }
 
-        /* 결과표 스타일 (모바일 가독성) */
+        /* 현황판 디자인 개선 */
         .ranking-container {
-            display: none; width: 100%; max-width: 400px;
-            background: var(--white); padding: 24px 18px; border-radius: 28px;
+            display: none; width: 100%; max-width: 420px;
+            background: var(--white); padding: 30px 20px; border-radius: 30px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.05); box-sizing: border-box;
-            animation: slideUp 0.6s ease-out;
+            margin-bottom: 40px; /* 바닥 여백 */
         }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
         
         table { width: 100%; border-collapse: collapse; }
-        th { font-size: 0.85rem; color: #888; padding-bottom: 12px; border-bottom: 2px solid #f8f9fa; }
-        td { padding: 15px 5px; border-bottom: 1px solid #f8f9fa; font-size: 0.95rem; text-align: center; }
-        .team-tag {
-            padding: 5px 10px; border-radius: 8px; font-weight: 800; font-size: 0.75rem; color: #fff;
-        }
+        th { font-size: 0.85rem; color: #999; padding-bottom: 15px; border-bottom: 2px solid #f8f9fa; }
+        td { padding: 18px 5px; border-bottom: 1px solid #f8f9fa; font-size: 1rem; text-align: center; }
+        .team-tag { padding: 6px 12px; border-radius: 10px; font-weight: 800; font-size: 0.8rem; color: #fff; }
         .A { background: #3498db; } .B { background: #9b59b6; } .C { background: #e74c3c; }
 
         .step { display: none; }
-        .step.active { display: block; animation: fadeIn 0.4s; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .step.active { display: block; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <section id="step1" class="step active">
-        <h2>📷 어디로 갈까요?</h2>
+        <h2>📷 어디로 출사를 갈까요?</h2>
         <div class="options">
             <label class="card"><input type="radio" name="location" value="북촌한옥마을"><span>북촌한옥마을</span></label>
             <label class="card"><input type="radio" name="location" value="남산서울타워"><span>남산서울타워</span></label>
@@ -124,36 +111,36 @@
     </section>
 
     <section id="step2" class="step">
-        <h2>👤 본인의 성함</h2>
-        <input type="text" id="userName" class="input-field" placeholder="성함을 입력하세요" maxlength="10">
+        <h2>👤 성함을 알려주세요</h2>
+        <input type="text" id="userName" class="input-field" placeholder="성함 입력" maxlength="10">
         <button onclick="assignTeam()">팀 배정 시작하기</button>
     </section>
 
     <section id="step3" class="step">
         <div id="roulette-box">?</div>
-        <p id="loading-text" style="font-weight:600; color:#666;">운명의 팀을 고르는 중...</p>
+        <p id="loading-text" style="font-weight:600; color:#888;">팀을 추첨하는 중입니다...</p>
         <button id="stop-btn" style="display:none;" onclick="handleStop()">지금 멈추기!</button>
         
         <div id="result-content" style="display:none;">
             <h2 id="display-team" style="margin-bottom: 10px;"></h2>
-            <p style="color:#888; font-size:0.9rem; margin-bottom: 20px;">전체 명단이 아래에 생성되었습니다.</p>
-            <button class="retry-btn" onclick="location.reload()">처음으로 가기</button>
+            <p style="color:#aaa; font-size:0.9rem; margin-bottom: 20px;">전체 명단이 업데이트되었습니다.</p>
+            <button style="background:#888;" onclick="location.reload()">처음으로</button>
         </div>
     </section>
 </div>
 
 <div id="ranking-section" class="ranking-container">
-    <h3 style="margin-top:0; color:var(--primary); text-align:center; font-size:1.1rem;">📊 현재 팀 배정 현황</h3>
+    <h3 style="margin-top:0; color:var(--primary); text-align:center; font-size:1.2rem; margin-bottom:20px;">📊 현재 팀 배정 현황</h3>
     <table>
         <thead>
-            <tr><th width="30%">이름</th><th width="40%">장소</th><th width="30%">팀</th></tr>
+            <tr><th>이름</th><th>장소</th><th>팀</th></tr>
         </thead>
         <tbody id="ranking-body"></tbody>
     </table>
 </div>
 
 <script>
-    // 1. Firebase 설정 (본인 것으로 유지)
+    // 1. Firebase 설정 (본인 것으로 유지하세요!)
     const firebaseConfig = {
         apiKey: "YOUR_API_KEY",
         authDomain: "hangeul-love-club.firebaseapp.com",
@@ -180,24 +167,26 @@
 
     async function assignTeam() {
         state.name = document.getElementById('userName').value.trim();
-        if(!state.name) return alert("성함을 꼭 입력해주세요!");
+        if(!state.name) return alert("성함을 입력해주세요!");
         goNext(3);
         
-        const snapshot = await db.ref('users').once('value');
-        const users = snapshot.val() ? Object.values(snapshot.val()) : [];
-        const counts = { 'A조': 0, 'B조': 0, 'C조': 0 };
-        users.forEach(u => { if(counts[u.team] !== undefined) counts[u.team]++; });
+        try {
+            const snapshot = await db.ref('users').once('value');
+            const users = snapshot.val() ? Object.values(snapshot.val()) : [];
+            const counts = { 'A조': 0, 'B조': 0, 'C조': 0 };
+            users.forEach(u => { if(counts[u.team] !== undefined) counts[u.team]++; });
 
-        const limits = { 'A조': 3, 'B조': 3, 'C조': 2 };
-        const available = Object.keys(limits).filter(t => counts[t] < limits[t]);
+            const limits = { 'A조': 3, 'B조': 3, 'C조': 2 };
+            const available = Object.keys(limits).filter(t => counts[t] < limits[t]);
 
-        if(available.length === 0) {
-            alert("정원이 모두 찼습니다!");
-            location.reload();
-            return;
-        }
-        state.team = available[Math.floor(Math.random() * available.length)];
-        document.getElementById('stop-btn').style.display = 'block';
+            if(available.length === 0) {
+                alert("정원이 가득 찼습니다!");
+                location.reload();
+                return;
+            }
+            state.team = available[Math.floor(Math.random() * available.length)];
+            document.getElementById('stop-btn').style.display = 'block';
+        } catch(e) { alert("데이터 연결 중 오류 발생"); }
     }
 
     async function handleStop() {
@@ -206,13 +195,13 @@
             name: state.name, location: state.location, team: state.team, date: new Date().toISOString()
         });
         
-        document.getElementById('roulette-box').classList.add('stop'); 
-        document.getElementById('roulette-box').innerText = state.team;
+        const box = document.getElementById('roulette-box');
+        box.classList.add('stop'); 
+        box.innerText = state.team;
         document.getElementById('loading-text').style.display = 'none';
         document.getElementById('result-content').style.display = 'block';
         document.getElementById('display-team').innerText = `${state.name}님은 ${state.team}!`;
         document.getElementById('ranking-section').style.display = 'block';
-        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
     }
 
     db.ref('users').on('value', (snapshot) => {
