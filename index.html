@@ -1,83 +1,107 @@
-<section id="step3" class="step">
-    <div id="roulette-box">?</div>
-    <p id="loading-text">팀을 배정하고 있습니다...</p>
-    
-    <button id="stop-btn" onclick="manualStop()" style="background: var(--accent); margin-bottom: 20px;">결과 바로 확인하기</button>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>출사 팀 빌딩</title>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+    <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.0/kakao.min.js"></script>
+    <style>
+        :root { --primary: #203864; --accent: #e67e22; }
+        body { font-family: sans-serif; background: #f4f7f6; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .container { width: 90%; max-width: 400px; background: white; padding: 2rem; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; }
+        .step { display: none; }
+        .step.active { display: block; }
+        .card { display: block; padding: 15px; border: 2px solid #ddd; border-radius: 10px; margin: 10px 0; cursor: pointer; }
+        .card:has(input:checked) { border-color: var(--primary); background: #f0f4f8; }
+        input[type="radio"] { display: none; }
+        input[type="text"] { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        button { width: 100%; padding: 15px; border: none; border-radius: 10px; background: var(--primary); color: white; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        button:disabled { background: #ccc; }
+        #roulette { width: 100px; height: 100px; line-height: 100px; margin: 20px auto; border-radius: 50%; background: var(--accent); color: white; font-size: 1.5rem; animation: spin 0.2s infinite linear; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        #roulette.stop { animation: none; background: #27ae60; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <section id="step1" class="step active">
+            <h2>장소 선택</h2>
+            <label class="card"><input type="radio" name="loc" value="북촌한옥마을"><span>북촌한옥마을</span></label>
+            <label class="card"><input type="radio" name="loc" value="남산서울타워"><span>남산서울타워</span></label>
+            <label class="card"><input type="radio" name="loc" value="덕수궁"><span>덕수궁</span></label>
+            <button onclick="next(2)" id="vBtn" disabled>투표 완료</button>
+        </section>
 
-    <div id="result-content" style="display:none;">
-        <h2 id="display-team"></h2>
-        <p id="display-loc" style="color:#666; margin-bottom:20px;"></p>
-        <button id="kakao-btn" onclick="sendKakao()">카카오톡으로 공유하기</button>
-        <button onclick="location.reload()" style="background:#eee; color:#333; margin-top:10px;">처음으로</button>
+        <section id="step2" class="step">
+            <h2>이름 입력</h2>
+            <input type="text" id="uName" placeholder="이름을 입력하세요">
+            <button onclick="start()">팀 배정 시작</button>
+        </section>
+
+        <section id="step3" class="step">
+            <div id="roulette">?</div>
+            <button id="stopBtn" onclick="stop()">결과 확인하기 (멈춤)</button>
+            <div id="res" style="display:none;">
+                <h2 id="fTeam"></h2>
+                <p id="fLoc"></p>
+                <button onclick="share()" style="background:#FEE500; color:black;">카카오톡 공유</button>
+            </div>
+        </section>
     </div>
-</section>
 
-<script>
-    // ... (상단 설정 및 변수들은 그대로 유지) ...
+    <script>
+        // 1. 설정 (본인 키 입력)
+        const firebaseConfig = { apiKey: "YOUR_KEY", databaseURL: "YOUR_URL", projectId: "YOUR_ID", appId: "YOUR_APP_ID" };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        Kakao.init('YOUR_KAKAO_KEY');
 
-    let isFinished = false; // 중복 멈춤 방지
+        let data = { name: "", loc: "", team: "" };
 
-    async function assignTeam() {
-        state.name = document.getElementById('userName').value.trim();
-        if(!state.name) return alert("이름을 입력해 주세요!");
+        document.querySelectorAll('input[name="loc"]').forEach(i => {
+            i.onclick = () => { data.loc = i.value; document.getElementById('vBtn').disabled = false; };
+        });
 
-        goNext(3);
-        isFinished = false;
-
-        try {
-            // 1. DB에서 현재 인원 확인 (최대 3초 대기)
-            const timeoutPromise = new Promise(resolve => setTimeout(() => resolve(null), 3000));
-            const snapshot = await Promise.race([db.ref('users').once('value'), timeoutPromise]);
-            
-            const users = snapshot && snapshot.val() ? Object.values(snapshot.val()) : [];
-            const counts = { 'A조': 0, 'B조': 0, 'C조': 0 };
-            users.forEach(u => { if(counts[u.team] !== undefined) counts[u.team]++; });
-
-            const limits = { 'A조': 3, 'B조': 3, 'C조': 2 };
-            const available = Object.keys(limits).filter(t => counts[t] < limits[t]);
-
-            // 조 배정 (데이터가 없으면 랜덤으로 선택)
-            const finalPool = available.length > 0 ? available : ['A조', 'B조', 'C조'];
-            state.team = finalPool[Math.floor(Math.random() * finalPool.length)];
-
-            // 2. 파이어베이스에 데이터 전송 (성공 여부와 상관없이 진행)
-            db.ref('users').push({
-                name: state.name,
-                location: state.location,
-                team: state.team,
-                date: new Date().toISOString()
-            }).catch(e => console.error("DB 저장 실패:", e));
-
-            // 3. 2.5초 후 자동으로 멈춤 연출
-            setTimeout(() => {
-                if(!isFinished) showFinalResult();
-            }, 2500);
-
-        } catch(e) {
-            console.error("오류 발생:", e);
-            state.team = "A조"; // 오류 시 기본값
-            setTimeout(() => { if(!isFinished) showFinalResult(); }, 2500);
+        function next(n) { 
+            document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+            document.getElementById('step'+n).classList.add('active');
         }
-    }
 
-    // 수동으로 멈추는 함수
-    function manualStop() {
-        if(!state.team) state.team = ['A조', 'B조', 'C조'][Math.floor(Math.random() * 3)];
-        showFinalResult();
-    }
+        function start() {
+            data.name = document.getElementById('uName').value;
+            if(!data.name) return alert("이름을 써주세요!");
+            next(3);
+            // 미리 팀 결정 (3:3:2 비율은 DB 상황에 따라 결정되지만 여기선 즉시 랜덤)
+            const teams = ['A조', 'B조', 'C조'];
+            data.team = teams[Math.floor(Math.random() * 3)];
+        }
 
-    function showFinalResult() {
-        isFinished = true;
-        const box = document.getElementById('roulette-box');
-        box.classList.add('stop');
-        box.innerText = state.team;
-        
-        document.getElementById('loading-text').style.display = 'none';
-        document.getElementById('stop-btn').style.display = 'none'; // 멈춤 버튼 숨기기
-        document.getElementById('result-content').style.display = 'block';
-        document.getElementById('display-team').innerText = `${state.name}님은 [${state.team}] 입니다!`;
-        document.getElementById('display-loc').innerText = `장소: ${state.location}`;
-    }
+        function stop() {
+            const r = document.getElementById('roulette');
+            r.classList.add('stop');
+            r.innerText = data.team;
+            document.getElementById('stopBtn').style.display = 'none';
+            document.getElementById('res').style.display = 'block';
+            document.getElementById('fTeam').innerText = data.name + "님은 " + data.team;
+            document.getElementById('fLoc').innerText = "장소: " + data.loc;
 
-    // ... (카카오 공유 함수 그대로 유지) ...
-</script>
+            // 멈추는 순간 DB에 기록
+            db.ref('users').push(data);
+        }
+
+        function share() {
+            Kakao.Share.sendDefault({
+                objectType: 'feed',
+                content: {
+                    title: '팀 배정 결과',
+                    description: data.name + '님: ' + data.loc + ' (' + data.team + ')',
+                    imageUrl: 'https://cdn-icons-png.flaticon.com/512/1042/1042339.png',
+                    link: { mobileWebUrl: location.href, webUrl: location.href }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
