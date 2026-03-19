@@ -17,21 +17,21 @@
             --success: #27ae60;
         }
 
-        /* 1. PC/모바일 통합 중앙 정렬 레이아웃 */
+        /* 전체 레이아웃 중앙 정렬 */
         body {
             font-family: 'Pretendard', -apple-system, sans-serif;
             margin: 0; 
-            padding: 40px 20px; /* 상하좌우 마진 확보 */
+            padding: 40px 20px; 
             background-color: var(--bg);
             display: flex; 
             flex-direction: column; 
             align-items: center; 
-            justify-content: center; /* PC에서 세로 중앙 정렬 */
+            justify-content: center; 
             min-height: 100vh; 
             box-sizing: border-box;
         }
 
-        /* 2. 컨테이너 디자인 개선 */
+        /* 컨테이너 디자인 */
         .container {
             width: 100%; 
             max-width: 420px; 
@@ -40,12 +40,13 @@
             border-radius: 30px;
             box-shadow: 0 15px 40px rgba(32, 56, 100, 0.12);
             text-align: center;
-            margin-bottom: 30px; /* 아래 현황판과의 간격 */
+            margin-bottom: 30px;
             box-sizing: border-box;
         }
 
         h2 { font-size: 1.4rem; color: var(--primary); margin-top: 0; margin-bottom: 2rem; }
 
+        /* 장소 선택 카드 */
         .options { display: flex; flex-direction: column; gap: 15px; margin-bottom: 2rem; }
         .card {
             padding: 20px; border: 2px solid #edf0f5; border-radius: 18px;
@@ -55,19 +56,43 @@
         .card:has(input:checked) {
             border-color: var(--primary); background: #f0f4f8; color: var(--primary);
         }
-        input[type="radio"], input[type="text"] { display: none; }
+        
+        /* 숨길 요소들 */
+        input[type="radio"] { display: none; }
+        .step { display: none; }
+        .step.active { display: block; }
 
+        /* ★ 성함 입력창 스타일 (복구 완료) ★ */
         .input-field {
-            width: 100%; padding: 18px; border: 2px solid #edf0f5;
-            border-radius: 16px; margin-bottom: 1.5rem; font-size: 1.1rem;
-            box-sizing: border-box; outline: none; text-align: center; display: block;
+            display: block; /* 사라졌던 입력창을 다시 표시 */
+            width: 100%; 
+            padding: 18px; 
+            border: 2px solid #edf0f5;
+            border-radius: 16px; 
+            margin-bottom: 1.5rem; 
+            font-size: 1.1rem;
+            box-sizing: border-box; 
+            outline: none; 
+            text-align: center;
+            background-color: #fcfcfc;
+            transition: 0.3s;
+        }
+        .input-field:focus {
+            border-color: var(--primary);
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(32, 56, 100, 0.05);
         }
 
+        /* 버튼 스타일 */
         button {
             width: 100%; padding: 18px; border: none; border-radius: 18px;
             background: var(--primary); color: white; font-weight: 700;
             font-size: 1.1rem; cursor: pointer; box-shadow: 0 8px 20px rgba(32, 56, 100, 0.2);
+            transition: 0.2s;
         }
+        button:active { transform: scale(0.98); }
+        button:disabled { background: #d1d8e0; box-shadow: none; cursor: not-allowed; }
+
         #stop-btn { background: var(--accent); margin-top: 15px; box-shadow: 0 8px 20px rgba(230, 126, 34, 0.3); }
 
         /* 룰렛 디자인 */
@@ -79,12 +104,12 @@
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         #roulette-box.stop { animation: none; background: var(--success); }
 
-        /* 현황판 디자인 개선 */
+        /* 현황판 디자인 */
         .ranking-container {
             display: none; width: 100%; max-width: 420px;
             background: var(--white); padding: 30px 20px; border-radius: 30px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.05); box-sizing: border-box;
-            margin-bottom: 40px; /* 바닥 여백 */
+            margin-bottom: 40px;
         }
         
         table { width: 100%; border-collapse: collapse; }
@@ -92,9 +117,6 @@
         td { padding: 18px 5px; border-bottom: 1px solid #f8f9fa; font-size: 1rem; text-align: center; }
         .team-tag { padding: 6px 12px; border-radius: 10px; font-weight: 800; font-size: 0.8rem; color: #fff; }
         .A { background: #3498db; } .B { background: #9b59b6; } .C { background: #e74c3c; }
-
-        .step { display: none; }
-        .step.active { display: block; }
     </style>
 </head>
 <body>
@@ -112,7 +134,7 @@
 
     <section id="step2" class="step">
         <h2>👤 성함을 알려주세요</h2>
-        <input type="text" id="userName" class="input-field" placeholder="성함 입력" maxlength="10">
+        <input type="text" id="userName" class="input-field" placeholder="여기에 성함 입력" maxlength="10">
         <button onclick="assignTeam()">팀 배정 시작하기</button>
     </section>
 
@@ -140,7 +162,7 @@
 </div>
 
 <script>
-    // 1. Firebase 설정 (본인 것으로 유지하세요!)
+    // 1. Firebase 설정 (본인 것으로 반드시 유지하세요!)
     const firebaseConfig = {
         apiKey: "YOUR_API_KEY",
         authDomain: "hangeul-love-club.firebaseapp.com",
@@ -167,7 +189,7 @@
 
     async function assignTeam() {
         state.name = document.getElementById('userName').value.trim();
-        if(!state.name) return alert("성함을 입력해주세요!");
+        if(!state.name) return alert("성함을 꼭 입력해주세요!");
         goNext(3);
         
         try {
